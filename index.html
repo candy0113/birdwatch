@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a1a0c">
+<title>BirdWatch · 观鸟探索平台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   RESET & TOKENS
+═══════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg-deep:#0a1a0c; --bg-panel:#0f2412; --bg-card:#142b17; --bg-hover:#1a3620;
+  --accent:#4caf6b; --accent-lime:#a8e063; --gold:#f0c040; --rare:#b06aff; --blue:#60a5fa;
+  --text-primary:#e8f5e9; --text-secondary:#8fbc8f; --text-muted:#4a7a4a;
+  --border:rgba(76,175,107,0.18); --border-bright:rgba(76,175,107,0.4);
+  --sidebar-w:250px; --right-w:300px;
+  --phone-w:375px;
+}
+html,body{height:100%;font-family:'Noto Sans SC',-apple-system,'PingFang SC',sans-serif;color:var(--text-primary)}
+
+/* ═══════════════════════════════════════════
+   MOBILE: Full-screen TikTok feed (< 900px)
+═══════════════════════════════════════════ */
+@media(max-width:899px){
+  html,body{overflow:hidden;background:#000;touch-action:none}
+  .desktop-layout{display:none}
+  .mobile-feed-root{display:block;position:fixed;inset:0}
+}
+@media(min-width:900px){
+  html,body{overflow:hidden;background:var(--bg-deep)}
+  .desktop-layout{display:flex;height:100vh}
+  .mobile-feed-root{display:none}
+}
+
+/* ═══════════════════════════════════════════
+   DESKTOP LAYOUT
+═══════════════════════════════════════════ */
+.desktop-layout{width:100%;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;
+  background:var(--bg-panel);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  height:100%;overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:none;
+}
+.sidebar::-webkit-scrollbar{display:none}
+.logo{
+  padding:20px 18px 14px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.logo-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,#2e7d32,#66bb6a);
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+}
+.logo-text{font-family:'Noto Serif SC',serif;font-size:17px;font-weight:700;color:var(--accent-lime)}
+.logo-sub{font-size:10px;color:var(--text-muted);margin-top:1px}
+
+nav{padding:10px 0;flex:1}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 18px;color:var(--text-secondary);
+  cursor:pointer;font-size:14px;position:relative;
+  transition:background 0.15s,color 0.15s;
+  border-left:3px solid transparent;
+}
+.nav-item:hover{background:var(--bg-hover);color:var(--text-primary)}
+.nav-item.active{background:rgba(76,175,107,0.1);color:var(--accent);border-left-color:var(--accent)}
+.nav-icon{font-size:17px;width:20px;text-align:center;flex-shrink:0}
+.nav-badge{
+  margin-left:auto;background:#c62828;color:#fff;
+  border-radius:20px;font-size:10px;padding:1px 6px;font-weight:700;
+}
+.nav-badge-green{
+  margin-left:auto;background:rgba(76,175,107,0.2);color:var(--accent);
+  border-radius:20px;font-size:10px;padding:1px 6px;font-weight:700;
+}
+.publish-btn{
+  margin:4px 14px 12px;padding:10px;
+  background:linear-gradient(135deg,#2e7d32,#43a047);
+  border:none;border-radius:10px;
+  color:#fff;font-size:14px;font-family:inherit;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-weight:500;transition:opacity 0.2s;flex-shrink:0;
+}
+.publish-btn:hover{opacity:0.85}
+
+.live-section{padding:10px 14px 8px;border-top:1px solid var(--border);flex-shrink:0}
+.section-label{
+  font-size:10px;color:var(--text-muted);text-transform:uppercase;
+  letter-spacing:1px;margin-bottom:6px;
+  display:flex;justify-content:space-between;
+}
+.live-user{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 2px;cursor:pointer;border-radius:8px;
+  transition:background 0.15s;
+}
+.live-user:hover{background:var(--bg-hover)}
+.avatar{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;flex-shrink:0;position:relative;
+}
+.avatar.live::after{
+  content:'';position:absolute;bottom:0;right:0;
+  width:8px;height:8px;background:#f44336;
+  border:1.5px solid var(--bg-panel);border-radius:50%;
+}
+.live-info{flex:1;min-width:0}
+.live-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.live-loc{font-size:10px;color:var(--text-muted)}
+.live-count{font-size:10px;color:var(--text-secondary);white-space:nowrap}
+.sidebar-footer{padding:10px 14px;font-size:10px;color:var(--text-muted);border-top:1px solid var(--border);flex-shrink:0}
+
+/* ── Centre (phone mockup) ── */
+.centre{
+  flex:1;min-width:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px 10px;
+  background:var(--bg-deep);
+  overflow:hidden;
+  position:relative;
+}
+
+/* phone shell */
+.phone{
+  width:var(--phone-w);
+  height:calc(100vh - 40px);
+  max-height:780px;
+  background:#000;
+  border-radius:44px;
+  border:3px solid #2a4a2d;
+  box-shadow:0 0 0 1px rgba(76,175,107,0.08),0 30px 70px rgba(0,0,0,0.7);
+  overflow:hidden;
+  position:relative;
+  display:flex;flex-direction:column;
+}
+.phone-notch{
+  background:#050e07;height:38px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;font-size:11px;color:var(--text-secondary);
+  flex-shrink:0;position:relative;
+}
+.notch-pill{
+  position:absolute;left:50%;transform:translateX(-50%);top:0;
+  width:76px;height:24px;background:#050e07;
+  border-radius:0 0 14px 14px;
+}
+.phone-body{flex:1;overflow:hidden;position:relative}
+
+/* TikTok feed inside phone */
+#deskFeed{
+  width:100%;height:100%;position:relative;overflow:hidden;background:#000;
+}
+.d-slide{
+  position:absolute;inset:0;
+  transform:translate3d(0,100%,0);
+  transition:transform 0.34s cubic-bezier(0.22,1,0.36,1);
+  background:#000;overflow:hidden;
+  contain:layout paint size;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+.d-slide.active{transform:translate3d(0,0,0);z-index:2}
+.d-slide.is-moving{will-change:transform}
+.d-slide.offscreen{visibility:hidden;pointer-events:none}
+
+/* phone bottom nav */
+.phone-nav{
+  background:rgba(5,14,7,0.96);backdrop-filter:blur(8px);
+  border-top:1px solid var(--border);
+  display:flex;padding:6px 0 10px;flex-shrink:0;
+}
+.pnav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-size:9px;color:var(--text-muted);cursor:pointer;position:relative;
+}
+.pnav-item.active{color:var(--accent)}
+.pnav-icon{font-size:19px}
+.pnav-plus{
+  width:44px;height:26px;border-radius:13px;
+  background:linear-gradient(135deg,#2e7d32,#66bb6a);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:#fff;
+}
+.pnav-badge{
+  position:absolute;top:0;right:calc(50% - 18px);
+  background:#f44336;color:#fff;
+  font-size:8px;font-weight:700;border-radius:8px;padding:1px 3px;
+}
+
+/* phone top tabs */
+.phone-tabs{
+  position:absolute;top:0;left:0;right:0;
+  display:flex;background:rgba(5,14,7,0.7);backdrop-filter:blur(8px);
+  padding:0 4px;border-bottom:1px solid rgba(76,175,107,0.12);
+  font-size:11px;z-index:20;overflow-x:auto;scrollbar-width:none;
+}
+.phone-tabs::-webkit-scrollbar{display:none}
+.phone-tab{
+  padding:8px 10px 6px;color:var(--text-muted);cursor:pointer;
+  white-space:nowrap;border-bottom:2px solid transparent;
+  transition:all 0.2s;display:flex;align-items:center;gap:3px;
+}
+.phone-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.live-dot{width:5px;height:5px;background:#f44336;border-radius:50%;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* ── Right Panel ── */
+.right-panel{
+  width:var(--right-w);flex-shrink:0;
+  background:var(--bg-panel);
+  border-left:1px solid var(--border);
+  height:100%;overflow-y:auto;overflow-x:hidden;
+  padding:16px 14px;scrollbar-width:thin;
+  scrollbar-color:var(--border) transparent;
+}
+.rp-section{margin-bottom:20px}
+.rp-title{
+  font-size:11px;font-weight:600;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:1px;
+  margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;
+}
+.rp-action{font-size:10px;color:var(--accent);font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer}
+
+/* hotspots */
+.hs-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.hs-item:last-child{border-bottom:none}
+.hs-rank{font-size:13px;font-weight:700;color:var(--text-muted);width:16px;text-align:center;flex-shrink:0}
+.hs-rank.top{color:var(--accent)}
+.hs-info{flex:1;min-width:0}
+.hs-name{font-size:12px;font-weight:500}
+.hs-meta{font-size:10px;color:var(--text-muted);margin-top:1px}
+.hs-bar{width:44px;height:2.5px;background:var(--border);border-radius:2px;flex-shrink:0}
+.hs-bar-fill{height:100%;background:var(--accent);border-radius:2px}
+
+/* events */
+.ev-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;align-items:flex-start}
+.ev-item:last-child{border-bottom:none}
+.ev-date{text-align:center;min-width:32px;flex-shrink:0}
+.ev-month{font-size:9px;color:var(--text-muted)}
+.ev-day{font-size:18px;font-weight:700;color:var(--accent-lime);line-height:1}
+.ev-info{flex:1;min-width:0}
+.ev-name{font-size:12px;font-weight:500;margin-bottom:2px;line-height:1.35}
+.ev-loc{font-size:10px;color:var(--text-muted)}
+.ev-prize{font-size:10px;color:var(--gold);background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.2);border-radius:4px;padding:2px 5px;white-space:nowrap;flex-shrink:0;align-self:center}
+
+/* mini bird cards */
+.mini-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mini-card{
+  border-radius:9px;padding:9px;position:relative;overflow:hidden;cursor:pointer;
+  min-height:80px;transition:transform 0.15s;
+}
+.mini-card:hover{transform:scale(1.02)}
+.mini-card.common{background:linear-gradient(135deg,#1a3d20,#0f2412);border:1px solid rgba(76,175,107,0.2)}
+.mini-card.uncommon{background:linear-gradient(135deg,#1e3040,#0f2030);border:1px solid rgba(96,165,250,0.3)}
+.mini-card.rare{background:linear-gradient(135deg,#3a1e40,#1a0f28);border:1px solid rgba(176,106,255,0.4)}
+.mini-card.legendary{background:linear-gradient(135deg,#3a2810,#281808);border:1px solid rgba(240,192,64,0.5)}
+.mc-rarity{font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.mc-rarity.common{color:var(--accent)}.mc-rarity.uncommon{color:var(--blue)}.mc-rarity.rare{color:var(--rare)}.mc-rarity.legendary{color:var(--gold)}
+.mc-name{font-size:12px;font-weight:600;margin-bottom:1px}
+.mc-latin{font-size:8px;color:var(--text-muted);font-style:italic}
+.mc-stars{font-size:8px;margin-top:3px}
+.mc-stars.common{color:var(--accent)}.mc-stars.uncommon{color:var(--blue)}.mc-stars.rare{color:var(--rare)}.mc-stars.legendary{color:var(--gold)}
+.mc-emoji{position:absolute;right:6px;bottom:5px;font-size:24px;opacity:0.75}
+
+/* sightings */
+.sight-card{
+  background:var(--bg-card);border-radius:9px;padding:9px;
+  border:1px solid var(--border);cursor:pointer;margin-bottom:7px;
+  transition:background 0.15s;
+}
+.sight-card:hover{background:var(--bg-hover)}
+.sight-card:last-child{margin-bottom:0}
+.sight-card.rare-b{border-color:rgba(176,106,255,0.25)}
+.sight-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.sight-bird{font-size:12px;font-weight:600}
+.sight-time-tag{font-size:9px;padding:1px 5px;border-radius:6px}
+.sight-time-tag.fresh{color:var(--accent);background:rgba(76,175,107,0.1)}
+.sight-time-tag.old{color:var(--text-muted);background:rgba(255,255,255,0.04)}
+.sight-rare-tag{font-size:9px;color:var(--rare);background:rgba(176,106,255,0.12);padding:1px 4px;border-radius:5px;margin-left:3px}
+.sight-meta{font-size:10px;color:var(--text-muted)}
+
+/* checkin desktop widget */
+.checkin-widget{
+  background:linear-gradient(135deg,#1a3a1e,#0f2412);
+  border:1px solid rgba(168,224,99,0.2);
+  border-radius:12px;padding:12px;position:relative;overflow:hidden;
+}
+.checkin-widget::after{
+  content:'';position:absolute;right:-15px;top:-15px;
+  width:80px;height:80px;
+  background:radial-gradient(circle,rgba(168,224,99,0.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+.cw-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cw-title{font-size:13px;font-weight:600}
+.cw-streak{font-size:11px;color:var(--gold)}
+.cw-days{display:flex;gap:3px;margin-bottom:10px}
+.cw-day{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;border:1px solid var(--border);color:var(--text-muted);flex-shrink:0}
+.cw-day.done{background:rgba(76,175,107,0.2);border-color:var(--accent);color:var(--accent)}
+.cw-day.today{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 6px rgba(76,175,107,0.4)}
+.cw-btn{
+  width:100%;padding:8px;
+  background:linear-gradient(135deg,#a8e063,#66bb6a);
+  border:none;border-radius:20px;
+  color:#0d1a0f;font-weight:700;font-size:12px;
+  font-family:inherit;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  transition:opacity 0.2s;
+}
+.cw-btn:hover{opacity:0.88}
+
+/* ─────────────────────────────────────────
+   PHONE FEED CONTENT (shared by desktop+mobile)
+───────────────────────────────────────── */
+/* video slide */
+.vid-wrap{position:relative;width:100%;height:100%;background:#000}
+video{width:100%;height:100%;object-fit:cover;display:block}
+.vid-gradient{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(0deg,rgba(0,0,0,.75) 0%,transparent 40%,transparent 70%,rgba(0,0,0,.25) 100%);
+}
+.tap-zone{position:absolute;inset:0;z-index:5;cursor:pointer}
+.pause-icon{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  width:64px;height:64px;border-radius:50%;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;transition:transform .15s,opacity .25s;
+  opacity:0;pointer-events:none;z-index:6;
+}
+.pause-icon.show{transform:translate(-50%,-50%) scale(1);opacity:1}
+.pause-icon.fadeout{opacity:0}
+.vid-loading{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:36px;height:36px;
+  border:3px solid rgba(255,255,255,.2);border-top-color:#fff;
+  border-radius:50%;animation:spin .8s linear infinite;z-index:4;
+}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+/* video info */
+.info{position:absolute;bottom:0;left:0;right:72px;padding:14px 14px 28px;z-index:10;pointer-events:none}
+.info-author{display:flex;align-items:center;gap:8px;margin-bottom:7px;pointer-events:auto}
+.author-avatar{width:32px;height:32px;border-radius:50%;border:2px solid #fff;background:linear-gradient(135deg,#2e7d32,#66bb6a);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.author-name{font-size:13px;font-weight:600}
+.follow-btn{margin-left:4px;border:1.5px solid #fff;border-radius:5px;padding:2px 7px;font-size:11px;cursor:pointer;background:rgba(0,0,0,0.3);color:#fff;font-family:inherit;transition:all .2s}
+.follow-btn.following{background:#fff;color:#000}
+.info-title{font-size:13px;line-height:1.45;margin-bottom:5px;font-weight:500}
+.info-tags{font-size:11px;color:rgba(255,255,255,.8);display:flex;flex-wrap:wrap;gap:3px}
+.tag{color:var(--accent)}
+.loc-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:2px 9px;font-size:10px;margin-top:6px}
+
+/* actions */
+.actions{position:absolute;right:8px;bottom:70px;display:flex;flex-direction:column;align-items:center;gap:16px;z-index:10}
+.act-btn{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+.act-icon{width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;font-size:19px;transition:transform .1s,background .2s}
+.act-btn:active .act-icon{transform:scale(.88)}
+.act-count{font-size:11px;color:#fff;font-weight:500;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+@keyframes likePop{0%{transform:scale(1)}40%{transform:scale(1.4)}70%{transform:scale(.9)}100%{transform:scale(1)}}
+.act-btn.pop .act-icon{animation:likePop .3s ease}
+
+/* progress */
+.progress-wrap{position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,.25);z-index:10}
+.progress-bar{height:100%;background:#fff;width:0%;transition:width .4s linear}
+
+/* music disc */
+.music-disc{
+  position:absolute;right:10px;bottom:26px;
+  width:30px;height:30px;border-radius:50%;
+  background:linear-gradient(135deg,#111,#333);border:2px solid #333;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+  animation:spin 3s linear infinite;z-index:10;
+  box-shadow:0 0 0 2px rgba(255,255,255,.08);
+}
+
+/* card slides inside phone */
+.card-scroll{width:100%;height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:none;padding:38px 0 60px}
+.card-scroll::-webkit-scrollbar{display:none}
+
+/* feature hub: vertical feed entry + horizontal cards */
+.feature-hub{position:relative;width:100%;height:100%;background:linear-gradient(180deg,#06100a,#000);overflow:hidden}
+.feature-top{position:absolute;top:38px;left:12px;right:72px;z-index:12}
+.feature-kicker{font-size:10px;color:var(--accent-lime);margin-bottom:4px}
+.feature-title{font-family:'Noto Serif SC',serif;font-size:22px;font-weight:700;color:#fff;line-height:1.15}
+.feature-sub{font-size:11px;color:var(--text-secondary);margin-top:5px;line-height:1.45}
+.feature-tabs{position:absolute;top:116px;left:10px;right:10px;z-index:13;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.feature-tabs::-webkit-scrollbar{display:none}
+.feature-tab{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);color:rgba(255,255,255,.68);border-radius:999px;padding:6px 10px;font-size:11px;font-family:inherit;white-space:nowrap;cursor:pointer}
+.feature-tab.active{background:#fff;color:#07120a;border-color:#fff;font-weight:700}
+.feature-track{position:absolute;inset:154px 0 0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;touch-action:pan-x}
+.feature-track::-webkit-scrollbar{display:none}
+.feature-panel{width:100%;height:100%;flex:0 0 100%;scroll-snap-align:start;padding:0 14px 72px;overflow:hidden}
+.feature-panel-scroll{height:100%;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;padding-bottom:14px}
+.feature-panel-scroll::-webkit-scrollbar{display:none}
+.panel-card{background:rgba(13,32,17,.9);border:1px solid rgba(76,175,107,.18);border-radius:14px;padding:14px;box-shadow:0 18px 50px rgba(0,0,0,.25)}
+.panel-title{font-size:17px;font-weight:800;color:#fff;margin-bottom:4px}
+.panel-desc{font-size:11px;color:var(--text-secondary);line-height:1.55;margin-bottom:12px}
+.identify-hero{min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(circle at 50% 30%,rgba(168,224,99,.18),transparent 54%),linear-gradient(160deg,#14331a,#08120a);border-color:rgba(168,224,99,.3)}
+.record-btn{width:128px;height:128px;border-radius:50%;border:2px solid rgba(255,255,255,.85);background:linear-gradient(135deg,#e8f5e9,#a8e063);color:#07120a;font-size:42px;display:flex;align-items:center;justify-content:center;margin:16px auto 12px;box-shadow:0 0 0 10px rgba(168,224,99,.1),0 18px 40px rgba(0,0,0,.36);cursor:pointer}
+.record-label{font-size:14px;font-weight:800;color:#fff}
+.identify-modes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.mode-btn{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);border-radius:12px;padding:10px;color:#fff;font-family:inherit;font-size:12px;text-align:left;cursor:pointer}
+.mode-btn span{display:block;color:var(--text-secondary);font-size:10px;margin-top:3px;line-height:1.35}
+.feature-hint{position:absolute;left:50%;bottom:48px;transform:translateX(-50%);z-index:14;font-size:10px;color:rgba(255,255,255,.55);background:rgba(0,0,0,.28);border-radius:999px;padding:5px 10px;pointer-events:none}
+
+/* skills */
+.skills-hero{padding:14px 14px 8px;background:linear-gradient(180deg,#1a3d1f 0%,transparent 100%)}
+.skills-hero-tag{display:inline-flex;align-items:center;gap:4px;background:rgba(76,175,107,0.15);border:1px solid rgba(76,175,107,0.3);border-radius:20px;padding:2px 8px;font-size:10px;color:var(--accent);margin-bottom:6px}
+.skills-hero-title{font-family:'Noto Serif SC',serif;font-size:19px;font-weight:700;color:#fff;margin-bottom:3px}
+.skills-hero-sub{font-size:11px;color:var(--text-secondary)}
+.skills-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:6px 2px}
+.skill-thumb{background:#111f13;aspect-ratio:9/7;position:relative;cursor:pointer;overflow:hidden}
+.skill-thumb-inner{width:100%;height:100%;background:linear-gradient(135deg,#1a3620 0%,#0d2010 100%);display:flex;align-items:center;justify-content:center;font-size:26px;position:relative}
+.skill-thumb-inner::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.7) 0%,transparent 50%)}
+.skill-play{position:absolute;width:28px;height:28px;background:rgba(255,255,255,.15);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;z-index:2;top:50%;left:50%;transform:translate(-50%,-50%)}
+.skill-title{position:absolute;bottom:0;left:0;right:0;padding:5px 7px;font-size:10px;color:#fff;z-index:3;line-height:1.3}
+.skill-count{position:absolute;bottom:3px;right:5px;font-size:9px;color:rgba(255,255,255,.7);z-index:3}
+.skill-center{grid-column:1/-1;aspect-ratio:16/7}
+.skill-center-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(176,106,255,.9);border-radius:16px;padding:5px 12px;font-size:14px;font-weight:800;color:#fff;letter-spacing:1px;z-index:4;font-family:'Noto Serif SC',serif}
+.skills-actions{display:flex;gap:8px;padding:10px 12px 20px}
+.btn-sk{flex:1;padding:10px;border-radius:22px;font-size:12px;font-family:inherit;cursor:pointer;transition:all .2s}
+.btn-sk.sec{background:rgba(76,175,107,.08);border:1px solid var(--border);color:var(--text-secondary)}
+.btn-sk.pri{background:linear-gradient(135deg,#2e7d32,#43a047);border:none;color:#fff;font-weight:500}
+.btn-sk:active{transform:scale(.96)}
+
+/* checkin card */
+.ck-wrap{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:50px 0 70px}
+.ck-box{width:100%;max-width:340px;background:linear-gradient(135deg,#1a3a1e,#0f2412);border:1px solid rgba(168,224,99,.2);border-radius:14px;padding:14px;position:relative;overflow:hidden}
+.ck-box::after{content:'';position:absolute;right:-15px;top:-15px;width:90px;height:90px;background:radial-gradient(circle,rgba(168,224,99,.07) 0%,transparent 70%);pointer-events:none}
+.ck-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ck-title{font-size:13px;font-weight:600}
+.ck-streak{font-size:11px;color:var(--gold)}
+.ck-days{display:flex;gap:4px;margin-bottom:10px}
+.dc{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;border:1px solid var(--border);color:var(--text-muted);flex-shrink:0}
+.dc.done{background:rgba(76,175,107,.2);border-color:var(--accent);color:var(--accent)}
+.dc.today{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 8px rgba(76,175,107,.4)}
+.ck-reveal{
+  background:linear-gradient(135deg,#1e1040,#0f0828);
+  border:2px solid rgba(176,106,255,.5);border-radius:14px;
+  padding:18px;text-align:center;margin-bottom:10px;
+  position:relative;overflow:hidden;cursor:pointer;min-height:160px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.ck-reveal::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,rgba(176,106,255,.15) 0%,transparent 70%);pointer-events:none}
+.reveal-emoji{font-size:56px;display:block;transition:all .3s;margin-bottom:5px}
+.reveal-rarity{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:3px}
+.reveal-name{font-family:'Noto Serif SC',serif;font-size:20px;font-weight:700;color:#fff}
+.reveal-latin{font-size:10px;color:var(--text-muted);font-style:italic;margin-top:2px}
+.reveal-stars{font-size:16px;margin-top:5px}
+.reveal-desc{font-size:11px;color:var(--text-secondary);margin-top:5px;line-height:1.5}
+.ck-btn{width:100%;padding:9px;background:linear-gradient(135deg,#a8e063,#66bb6a);border:none;border-radius:20px;color:#0d1a0f;font-weight:700;font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.ck-btn:active{transform:scale(.97)}
+.ck-extra{text-align:center;font-size:11px;color:var(--text-muted);margin-top:10px}
+.ck-extra span{color:var(--accent-lime)}
+
+/* hotspots */
+.hs-wrap{width:100%;max-width:340px;margin:0 auto;padding:0 14px}
+.hs-sec{margin-bottom:14px}
+.hs-head{font-size:13px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.phone-hs-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.phone-hs-item:last-child{border-bottom:none}
+.phi-rank{font-size:12px;font-weight:700;color:var(--text-muted);width:14px;text-align:center;flex-shrink:0}
+.phi-rank.t{color:var(--accent)}
+.phi-info{flex:1;min-width:0}
+.phi-name{font-size:12px;font-weight:500}
+.phi-meta{font-size:10px;color:var(--text-muted);margin-top:1px}
+.phi-bar{width:40px;height:2.5px;background:var(--border);border-radius:2px;flex-shrink:0}
+.phi-bar-fill{height:100%;background:var(--accent);border-radius:2px}
+.phone-ev-item{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer;align-items:flex-start}
+.phone-ev-item:last-child{border-bottom:none}
+.pei-date{text-align:center;min-width:30px;flex-shrink:0}
+.pei-month{font-size:9px;color:var(--text-muted)}
+.pei-day{font-size:17px;font-weight:700;color:var(--accent-lime);line-height:1}
+.pei-info{flex:1;min-width:0}
+.pei-name{font-size:11px;font-weight:500;margin-bottom:2px;line-height:1.35}
+.pei-loc{font-size:10px;color:var(--text-muted)}
+.pei-prize{font-size:10px;color:var(--gold);background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.2);border-radius:4px;padding:2px 5px;white-space:nowrap;flex-shrink:0;align-self:center}
+
+/* collection */
+.col-wrap{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:50px 0 70px}
+.col-inner{width:100%;max-width:340px;padding:0 14px}
+.col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.col-title{font-size:14px;font-weight:600}
+.col-badge{font-size:9px;font-weight:700;color:var(--gold);background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.2);border-radius:8px;padding:2px 7px}
+.col-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.phone-bird-card{border-radius:9px;padding:9px;position:relative;overflow:hidden;cursor:pointer;min-height:84px;transition:transform .2s}
+.phone-bird-card:active{transform:scale(.97)}
+.pbc-common{background:linear-gradient(135deg,#1a3d20,#0f2412);border:1px solid rgba(76,175,107,.2)}
+.pbc-uncommon{background:linear-gradient(135deg,#1e3040,#0f2030);border:1px solid rgba(96,165,250,.3)}
+.pbc-rare{background:linear-gradient(135deg,#3a1e40,#1a0f28);border:1px solid rgba(176,106,255,.4)}
+.pbc-legendary{background:linear-gradient(135deg,#3a2810,#281808);border:1px solid rgba(240,192,64,.5)}
+.pbc-rarity{font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.pbc-rarity.common{color:var(--accent)}.pbc-rarity.uncommon{color:var(--blue)}.pbc-rarity.rare{color:var(--rare)}.pbc-rarity.legendary{color:var(--gold)}
+.pbc-name{font-size:12px;font-weight:600;margin-bottom:2px}
+.pbc-latin{font-size:8px;color:var(--text-muted);font-style:italic}
+.pbc-stars{font-size:8px;margin-top:3px}
+.pbc-stars.common{color:var(--accent)}.pbc-stars.uncommon{color:var(--blue)}.pbc-stars.rare{color:var(--rare)}.pbc-stars.legendary{color:var(--gold)}
+.pbc-emoji{position:absolute;right:7px;bottom:5px;font-size:25px;opacity:.8}
+
+/* sightings inside phone */
+.sights-wrap{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:50px 0 70px}
+.sights-inner{width:100%;max-width:340px;padding:0 14px}
+.sights-head{font-size:14px;font-weight:600;margin-bottom:8px}
+.phone-sight-item{background:var(--bg-card);border-radius:9px;padding:9px;margin-bottom:7px;border:1px solid var(--border);cursor:pointer}
+.phone-sight-item.rare-b{border-color:rgba(176,106,255,.2)}
+.psi-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.psi-bird{font-size:12px;font-weight:600}
+.psi-time{font-size:9px;padding:1px 5px;border-radius:5px}
+.psi-time.fresh{color:var(--accent);background:rgba(76,175,107,.1)}
+.psi-time.old{color:var(--text-muted);background:rgba(255,255,255,.04)}
+.psi-rare{font-size:9px;color:var(--rare);background:rgba(176,106,255,.12);padding:1px 4px;border-radius:4px;margin-left:3px}
+.psi-meta{font-size:10px;color:var(--text-muted)}
+.context-pill{display:inline-flex;align-items:center;gap:4px;margin-bottom:8px;padding:4px 9px;border-radius:999px;background:rgba(76,175,107,.13);border:1px solid rgba(76,175,107,.25);font-size:10px;color:var(--accent-lime)}
+.ai-reason{margin-top:9px;font-size:10px;color:rgba(232,245,233,.48);line-height:1.5}
+.sound-box{margin-top:10px;padding:10px;border-radius:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+.sound-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sound-btn{border:0;border-radius:18px;padding:8px 13px;background:#fff;color:#08120a;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer}
+.sound-result{font-size:11px;color:var(--text-secondary);line-height:1.45}
+.sound-wave{height:18px;display:flex;align-items:center;gap:3px;margin-top:9px;opacity:.55}
+.sound-wave span{width:3px;border-radius:2px;background:var(--accent);height:8px}
+.sound-wave span:nth-child(2){height:14px}.sound-wave span:nth-child(3){height:10px}.sound-wave span:nth-child(4){height:16px}.sound-wave span:nth-child(5){height:7px}
+
+/* megarare */
+.mr-wrap{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:20px}
+.mr-card{width:100%;max-width:320px;background:linear-gradient(160deg,#1a0840,#280f60,#0d0428);border:2px solid rgba(176,106,255,.5);border-radius:22px;padding:28px 18px 24px;text-align:center;position:relative;overflow:hidden}
+.mr-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 20%,rgba(176,106,255,.2) 0%,transparent 60%);pointer-events:none}
+.mr-badge{display:inline-block;background:rgba(176,106,255,.3);border:1px solid rgba(176,106,255,.6);border-radius:18px;padding:4px 14px;font-size:10px;font-weight:800;letter-spacing:2px;color:var(--rare);margin-bottom:10px}
+.mr-emoji{font-size:72px;display:block;margin-bottom:6px;animation:floatBird 3s ease-in-out infinite}
+@keyframes floatBird{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}
+.mr-title{font-family:'Noto Serif SC',serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.3}
+.mr-count{font-size:12px;color:rgba(255,255,255,.6);margin-bottom:14px}
+.mr-btn{display:inline-block;padding:9px 28px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:22px;color:#fff;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:transform .15s}
+.mr-btn:active{transform:scale(.95)}
+
+/* ─── Shared overlays (toast, drawers) ─── */
+.toast{
+  position:fixed;bottom:80px;left:50%;
+  transform:translateX(-50%) translateY(10px);
+  background:rgba(10,26,12,.92);backdrop-filter:blur(8px);
+  border:1px solid rgba(76,175,107,.25);
+  border-radius:28px;padding:7px 18px;font-size:12px;
+  z-index:500;opacity:0;transition:.2s;white-space:nowrap;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none}
+.drawer-overlay.show{display:block}
+.drawer{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--bg-panel);border-radius:18px 18px 0 0;
+  border-top:1px solid var(--border);
+  padding:14px;z-index:400;
+  transform:translateY(100%);transition:transform .3s;
+  max-height:60vh;overflow-y:auto;
+}
+.drawer.open{transform:translateY(0)}
+.drawer-handle{width:36px;height:3px;background:rgba(255,255,255,.2);border-radius:2px;margin:0 auto 12px}
+.drawer-title{font-size:15px;font-weight:600;margin-bottom:12px;text-align:center}
+.comment-item{display:flex;gap:10px;margin-bottom:14px}
+.cmt-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1a4a24,#2e7d32);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.cmt-body{flex:1}
+.cmt-name{font-size:11px;color:var(--text-secondary);margin-bottom:2px}
+.cmt-text{font-size:13px}
+.share-panel{
+  position:fixed;bottom:0;left:0;right:0;
+  background:#1a1a1a;border-radius:18px 18px 0 0;
+  padding:18px 14px 32px;z-index:400;
+  transform:translateY(100%);transition:transform .3s;
+}
+.share-panel.open{transform:translateY(0)}
+.share-title{font-size:13px;color:#aaa;text-align:center;margin-bottom:16px}
+.share-row{display:flex;justify-content:space-around}
+.share-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+.share-icon{width:48px;height:48px;border-radius:14px;background:#2a2a2a;display:flex;align-items:center;justify-content:center;font-size:24px}
+.share-label{font-size:10px;color:#ccc}
+
+/* slide dots (mobile only) */
+.slide-dots{position:fixed;right:6px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:5px;z-index:50;pointer-events:none}
+.dot{width:3px;height:13px;border-radius:2px;background:rgba(255,255,255,.25);transition:all .2s}
+.dot.active{background:var(--accent);height:22px}
+
+@media(max-width:899px){
+  .phone-tabs,
+  .act-icon,
+  .pause-icon,
+  .skill-play,
+  .toast,
+  [style*="backdrop-filter"]{
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+  }
+  .act-icon{background:rgba(0,0,0,.46)}
+  .music-disc{animation:none}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .d-slide{transition:none!important}
+  .music-disc,.mr-emoji,.live-dot{animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     DESKTOP LAYOUT
+════════════════════════════════════════ -->
+<div class="desktop-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🦅</div>
+      <div><div class="logo-text">BirdWatch</div><div class="logo-sub">观鸟探索平台</div></div>
+    </div>
+    <nav>
+      <div class="nav-item active" onclick="deskNavClick(this,'home')"><span class="nav-icon">🏠</span>首页</div>
+      <div class="nav-item" onclick="deskNavClick(this,'live')"><span class="nav-icon">📡</span>直播大厅</div>
+      <div class="nav-item" onclick="deskNavClick(this,'map')"><span class="nav-icon">🗺️</span>鸟点地图</div>
+      <div class="nav-item" onclick="deskNavClick(this,'birders')"><span class="nav-icon">👥</span>鸟友动态</div>
+      <div class="nav-item" onclick="deskNavClick(this,'msg')"><span class="nav-icon">💬</span>消息<span class="nav-badge">8</span></div>
+      <div class="nav-item" onclick="deskNavClick(this,'identify')"><span class="nav-icon">🎧</span>识鸟</div>
+      <div class="nav-item" onclick="deskNavClick(this,'checkin')"><span class="nav-icon">🃏</span>每日打卡<span class="nav-badge-green">未签到</span></div>
+      <div class="nav-item" onclick="deskNavClick(this,'collection')"><span class="nav-icon">📖</span>鸟类图鉴</div>
+    </nav>
+    <button class="publish-btn" onclick="showToast('📝 发布鸟况功能即将上线！')">+ 发布我的鸟况</button>
+
+    <div class="live-section">
+      <div class="section-label"><span>正在直播</span><span style="color:var(--accent)">5 位</span></div>
+      <div class="live-user" onclick="showToast('进入直播：翠鸟Alice')">
+        <div class="avatar live" style="background:linear-gradient(135deg,#1a6b3a,#2e9e5a)">A</div>
+        <div class="live-info"><div class="live-name">翠鸟Alice</div><div class="live-loc">西溪湿地公园</div></div>
+        <div class="live-count">1.2k 人看</div>
+      </div>
+      <div class="live-user" onclick="showToast('进入直播：望远镜Carl')">
+        <div class="avatar live" style="background:linear-gradient(135deg,#1a3d6b,#2e6b9e)">C</div>
+        <div class="live-info"><div class="live-name">望远镜Carl</div><div class="live-loc">鄱阳湖保护区</div></div>
+        <div class="live-count">860 人看</div>
+      </div>
+      <div class="live-user" onclick="showToast('进入直播：夜鸟阿三')">
+        <div class="avatar live" style="background:linear-gradient(135deg,#6b1a4a,#9e2e72)">三</div>
+        <div class="live-info"><div class="live-name">夜鸟阿三</div><div class="live-loc">北京野鸭湖</div></div>
+        <div class="live-count">5,231</div>
+      </div>
+    </div>
+    <div class="sidebar-footer">© 2026 BirdWatch Explorer</div>
+  </aside>
+
+  <!-- Centre: Phone mockup -->
+  <div class="centre">
+    <div class="phone">
+      <div class="phone-notch">
+        <span>9:41</span>
+        <div class="notch-pill"></div>
+        <span>🔋</span>
+      </div>
+      <div class="phone-body">
+        <!-- tabs inside phone -->
+        <div class="phone-tabs">
+          <div class="phone-tab"><div class="live-dot"></div>&nbsp;直播</div>
+          <div class="phone-tab">附近</div>
+          <div class="phone-tab">关注</div>
+          <div class="phone-tab">鸟友</div>
+          <div class="phone-tab active" onclick="deskTabClick(this)">推荐</div>
+          <div class="phone-tab" onclick="deskTabClick(this)">精选</div>
+          <div style="padding:7px 8px;color:var(--text-muted);font-size:14px;cursor:pointer" onclick="showToast('🔍 搜索')">🔍</div>
+        </div>
+        <!-- feed -->
+        <div id="deskFeed"></div>
+      </div>
+      <div class="phone-nav">
+        <div class="pnav-item active"><div class="pnav-icon">🏠</div><div>首页</div></div>
+        <div class="pnav-item" onclick="showToast('鸟友')"><div class="pnav-icon">👥</div><div>鸟友</div></div>
+        <div class="pnav-item" onclick="jumpToCheckin()"><div class="pnav-plus">+</div></div>
+        <div class="pnav-item" onclick="showToast('消息')"><div class="pnav-icon">💬</div><div>消息</div><div class="pnav-badge">8</div></div>
+        <div class="pnav-item" onclick="showToast('个人主页')"><div class="pnav-icon">👤</div><div>我</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right panel -->
+  <aside class="right-panel">
+
+    <!-- Daily checkin widget -->
+    <div class="rp-section">
+      <div class="rp-title">每日打卡抽卡 <span class="rp-action" onclick="jumpToCheckin()">立即签到 →</span></div>
+      <div class="checkin-widget">
+        <div class="cw-top"><div class="cw-title">🃏 签到领鸟卡</div><div class="cw-streak">🔥 7天连续</div></div>
+        <div class="cw-days">
+          <div class="cw-day done">一</div><div class="cw-day done">二</div><div class="cw-day done">三</div>
+          <div class="cw-day done">四</div><div class="cw-day done">五</div><div class="cw-day done">六</div>
+          <div class="cw-day today">日</div>
+        </div>
+        <button class="cw-btn" onclick="jumpToCheckin()">🎴 翻开今日鸟卡</button>
+      </div>
+    </div>
+
+    <!-- Hotspots -->
+    <div class="rp-section">
+      <div class="rp-title">本周热点鸟地 <span class="rp-action">按热度</span></div>
+      <div class="hs-item" onclick="showToast('前往：西溪湿地观鸟台')">
+        <div class="hs-rank top">1</div>
+        <div class="hs-info"><div class="hs-name">西溪湿地 · 观鸟台</div><div class="hs-meta">2.4 km · 今日 312 种记录</div></div>
+        <div class="hs-bar"><div class="hs-bar-fill" style="width:100%"></div></div>
+      </div>
+      <div class="hs-item" onclick="showToast('前往：鄱阳湖候鸟保护区')">
+        <div class="hs-rank top">2</div>
+        <div class="hs-info"><div class="hs-name">鄱阳湖 · 候鸟保护区</div><div class="hs-meta">6.1 km · 今日 164 种记录</div></div>
+        <div class="hs-bar"><div class="hs-bar-fill" style="width:70%"></div></div>
+      </div>
+      <div class="hs-item" onclick="showToast('前往：北京野鸭湖')">
+        <div class="hs-rank">3</div>
+        <div class="hs-info"><div class="hs-name">北京野鸭湖湿地</div><div class="hs-meta">12.8 km · 今日 98 种记录</div></div>
+        <div class="hs-bar"><div class="hs-bar-fill" style="width:44%"></div></div>
+      </div>
+      <div class="hs-item" onclick="showToast('前往：深圳福田红树林')">
+        <div class="hs-rank">4</div>
+        <div class="hs-info"><div class="hs-name">深圳福田 · 红树林</div><div class="hs-meta">15 km · 今日 76 种记录</div></div>
+        <div class="hs-bar"><div class="hs-bar-fill" style="width:28%"></div></div>
+      </div>
+    </div>
+
+    <!-- Events -->
+    <div class="rp-section">
+      <div class="rp-title">近期赛事 <span class="rp-action">日历 ›</span></div>
+      <div class="ev-item" onclick="showToast('报名：2026全国观鸟赛')">
+        <div class="ev-date"><div class="ev-month">04月</div><div class="ev-day">28</div></div>
+        <div class="ev-info"><div class="ev-name">2026 达亿瓦全国观鸟赛</div><div class="ev-loc">📍 深圳 观澜</div></div>
+        <div class="ev-prize">¥100,000+</div>
+      </div>
+      <div class="ev-item" onclick="showToast('报名：银川春季鸟类普查')">
+        <div class="ev-date"><div class="ev-month">05月</div><div class="ev-day">20</div></div>
+        <div class="ev-info"><div class="ev-name">甘肃银川 · 春季鸟类普查</div><div class="ev-loc">📍 甘肃 银川</div></div>
+        <div class="ev-prize">¥10,000+</div>
+      </div>
+      <div class="ev-item" onclick="showToast('报名：鄱阳生态嘉年华')">
+        <div class="ev-date"><div class="ev-month">06月</div><div class="ev-day">01</div></div>
+        <div class="ev-info"><div class="ev-name">江西鄱阳 · 湖区生态嘉年华</div><div class="ev-loc">📍 江西 鄱阳</div></div>
+        <div class="ev-prize">¥10,000+</div>
+      </div>
+    </div>
+
+    <!-- Mini card showcase -->
+    <div class="rp-section">
+      <div class="rp-title">鸟卡图鉴 <span class="rp-action">查看全部</span></div>
+      <div class="mini-card-grid">
+        <div class="mini-card legendary" onclick="jumpToCheckin()">
+          <div class="mc-rarity legendary">LEGENDARY</div>
+          <div class="mc-name">丹顶鹤</div>
+          <div class="mc-latin">Grus japonensis</div>
+          <div class="mc-stars legendary">★★★★★</div>
+          <div class="mc-emoji">🦢</div>
+        </div>
+        <div class="mini-card rare" onclick="jumpToCheckin()">
+          <div class="mc-rarity rare">RARE</div>
+          <div class="mc-name">黑颈鹤</div>
+          <div class="mc-latin">Grus nigricollis</div>
+          <div class="mc-stars rare">★★★★☆</div>
+          <div class="mc-emoji">🦅</div>
+        </div>
+        <div class="mini-card uncommon" onclick="jumpToCheckin()">
+          <div class="mc-rarity uncommon">UNCOMMON</div>
+          <div class="mc-name">白腹鹞</div>
+          <div class="mc-latin">Circus spilonotus</div>
+          <div class="mc-stars uncommon">★★★☆☆</div>
+          <div class="mc-emoji">🦉</div>
+        </div>
+        <div class="mini-card common" onclick="jumpToCheckin()">
+          <div class="mc-rarity common">COMMON</div>
+          <div class="mc-name">翠鸟</div>
+          <div class="mc-latin">Alcedo atthis</div>
+          <div class="mc-stars common">★★☆☆☆</div>
+          <div class="mc-emoji">🐦</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Realtime sightings -->
+    <div class="rp-section">
+      <div class="rp-title">⚡ 实时鸟况速报</div>
+      <div class="sight-card" onclick="showToast('苍鹭 × 12 只 @ 西溪湿地')">
+        <div class="sight-top"><span class="sight-bird">🦢 苍鹭 × 12 只</span><span class="sight-time-tag fresh">2分钟前</span></div>
+        <div class="sight-meta">📍 西溪湿地 · @翠鸟Alice</div>
+      </div>
+      <div class="sight-card rare-b" onclick="showToast('🔥 稀有！遗鸥 @ 鄱阳湖')">
+        <div class="sight-top"><span class="sight-bird">🦅 遗鸥 × 1 只<span class="sight-rare-tag">稀有!</span></span><span class="sight-time-tag old">15分钟前</span></div>
+        <div class="sight-meta">📍 鄱阳湖 · @望远镜Carl</div>
+      </div>
+      <div class="sight-card" onclick="showToast('红嘴蓝鹊 @ 北京野鸭湖')">
+        <div class="sight-top"><span class="sight-bird">🐦 红嘴蓝鹊 × 3 只</span><span class="sight-time-tag old">32分钟前</span></div>
+        <div class="sight-meta">📍 北京野鸭湖 · @夜鸟阿三</div>
+      </div>
+    </div>
+
+  </aside>
+</div><!-- /desktop-layout -->
+
+<!-- ════════════════════════════════════════
+     MOBILE FEED ROOT
+════════════════════════════════════════ -->
+<div class="mobile-feed-root">
+  <div id="mobFeed" style="position:absolute;inset:0"></div>
+  <div class="slide-dots" id="mobDots"></div>
+  <!-- mobile top nav -->
+  <div style="position:fixed;top:0;left:0;right:0;display:flex;justify-content:center;padding:env(safe-area-inset-top,10px) 14px 0;z-index:50;pointer-events:none">
+    <div style="display:flex;background:rgba(10,26,12,.75);backdrop-filter:blur(10px);border-radius:28px;padding:3px 5px;pointer-events:auto;gap:2px">
+      <div class="phone-tab active" onclick="mobTabClick(this,'live')"><div class="live-dot"></div>&nbsp;直播</div>
+      <div class="phone-tab active" onclick="mobTabClick(this,'rec')" style="color:#fff;border-bottom-color:var(--accent)">推荐</div>
+      <div class="phone-tab" onclick="mobTabClick(this,'near')">附近</div>
+    </div>
+  </div>
+  <div style="position:fixed;top:env(safe-area-inset-top,10px);left:12px;font-size:16px;font-weight:800;z-index:51;text-shadow:0 1px 4px rgba(0,0,0,.6)">🦅 <span style="color:var(--accent)">Bird</span>Watch</div>
+  <div style="position:fixed;top:env(safe-area-inset-top,12px);right:12px;z-index:51;font-size:20px;cursor:pointer;text-shadow:0 1px 4px #000" onclick="showToast('🔍 搜索')">🔍</div>
+</div>
+
+<!-- Shared overlays -->
+<div class="toast" id="toast"></div>
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeAllPanels()"></div>
+<div class="drawer" id="commentDrawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-title" id="commentTitle">评论 1,280</div>
+  <div class="comment-item"><div class="cmt-avatar">🦆</div><div class="cmt-body"><div class="cmt-name">翠鸟Alice</div><div class="cmt-text">太震撼了！西溪湿地也见过丹顶鹤，激动到手抖 😭</div></div></div>
+  <div class="comment-item"><div class="cmt-avatar">🦉</div><div class="cmt-body"><div class="cmt-name">望远镜Carl</div><div class="cmt-text">这角度绝了，请问用的什么镜头？</div></div></div>
+  <div class="comment-item"><div class="cmt-avatar">🐦</div><div class="cmt-body"><div class="cmt-name">夜观派</div><div class="cmt-text">连续签到30天终于抽到传说卡，太值了！</div></div></div>
+  <div class="comment-item"><div class="cmt-avatar">🦢</div><div class="cmt-body"><div class="cmt-name">鄱阳湖守望者</div><div class="cmt-text">今年冬候鸟数量明显增多，保护成效显著！</div></div></div>
+</div>
+<div class="share-panel" id="sharePanel">
+  <div class="share-title">分享给好友</div>
+  <div class="share-row">
+    <div class="share-item" onclick="closeAllPanels();showToast('🔗 复制链接')"><div class="share-icon">🔗</div><div class="share-label">链接</div></div>
+    <div class="share-item" onclick="closeAllPanels();showToast('💚 微信')"><div class="share-icon">💚</div><div class="share-label">微信</div></div>
+    <div class="share-item" onclick="closeAllPanels();showToast('🌐 朋友圈')"><div class="share-icon">🌐</div><div class="share-label">朋友圈</div></div>
+    <div class="share-item" onclick="closeAllPanels();showToast('📥 已保存')"><div class="share-icon">📥</div><div class="share-label">下载</div></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════
+   DATA
+═══════════════════════════════════ */
+const VIDEOS = [
+  { type:'video',
+    src:'assets/videos/bird-pelican.mp4',
+    author:'湿地守望者', authorEmoji:'🦢',
+    title:'湿地水鸟掠过镜头，今天的第一张鸟卡出现了',
+    tags:['#观鸟打卡','#湿地水鸟','#本地视频'], location:'📍 本地素材库',
+    likes:32100, comments:1280, saves:8900, music:'大自然声音合集' },
+  { type:'video',
+    src:'assets/videos/bird-humming.mp4',
+    author:'蜂鸟观察站', authorEmoji:'🌺',
+    title:'超近距离鸟类瞬间，适合作为信息流视频垫片',
+    tags:['#蜂鸟','#近景观察','#本地视频'], location:'📍 本地素材库',
+    likes:88700, comments:5320, saves:24600, music:'雨林晨曦' },
+  { type:'video',
+    src:'assets/videos/bird-eagle.mp4',
+    author:'猛禽研究所', authorEmoji:'🦅',
+    title:'猛禽出场，系统判断你可能喜欢力量感画面',
+    tags:['#金雕','#猛禽','#本地视频'], location:'📍 本地素材库',
+    likes:156000, comments:9800, saves:41200, music:'史诗自然' },
+  { type:'video',
+    src:'assets/videos/douyin-bird.mp4',
+    author:'本地鸟友', authorEmoji:'🐦',
+    title:'本地下载的竖屏鸟类视频，用来模拟抖音原生信息流',
+    tags:['#抖音素材','#鸟类视频','#本地文件'], location:'📍 本地演示素材',
+    likes:46800, comments:2100, saves:9900, music:'现场自然声' },
+];
+
+const CARDS = [
+  { type:'card', cardType:'featureHub' },
+  { type:'card', cardType:'skills' },
+  { type:'card', cardType:'checkin' },
+  { type:'card', cardType:'hotspots' },
+  { type:'card', cardType:'collection' },
+  { type:'card', cardType:'sightings' },
+  { type:'card', cardType:'megarare' },
+];
+
+// Feed sequence
+const allItems = [
+  VIDEOS[0], VIDEOS[1], CARDS[0], VIDEOS[2], VIDEOS[3],
+];
+
+const BIRDS = [
+  {e:'🦚',n:'绿孔雀',l:'Pavo muticus',r:'LEGENDARY',s:'★★★★★',c:'#f0c040',d:'国家一级保护动物，中国境内野生不足500只',bg:'linear-gradient(135deg,#3a2810,#281808)'},
+  {e:'🦢',n:'丹顶鹤',l:'Grus japonensis',r:'LEGENDARY',s:'★★★★★',c:'#f0c040',d:'国家一级保护鸟类，东亚候鸟旗舰种',bg:'linear-gradient(135deg,#3a2810,#281808)'},
+  {e:'🦅',n:'遗鸥',l:'Larus relictus',r:'RARE',s:'★★★★☆',c:'#b06aff',d:'国家一级保护鸟类，全球种群数量极少',bg:'linear-gradient(135deg,#1e1040,#0f0828)'},
+  {e:'🦉',n:'黑颈鹤',l:'Grus nigricollis',r:'RARE',s:'★★★★☆',c:'#b06aff',d:'世界上唯一高原鹤类，越冬于云贵高原',bg:'linear-gradient(135deg,#1e1040,#0f0828)'},
+  {e:'🐦',n:'白腹鹞',l:'Circus spilonotus',r:'UNCOMMON',s:'★★★☆☆',c:'#60a5fa',d:'候鸟，迁徙季可在湿地发现，飞行姿态优美',bg:'linear-gradient(135deg,#102838,#081828)'},
+  {e:'🦜',n:'戴胜',l:'Upupa epops',r:'UNCOMMON',s:'★★★☆☆',c:'#60a5fa',d:'以华丽扇形羽冠著称，以色列国鸟，公园常见',bg:'linear-gradient(135deg,#102838,#081828)'},
+  {e:'🐦',n:'翠鸟',l:'Alcedo atthis',r:'COMMON',s:'★★☆☆☆',c:'#4caf6b',d:'水边常见精灵，蓝橙羽色鲜艳，捕鱼时如宝石',bg:'linear-gradient(135deg,#1a3d20,#0f2412)'},
+  {e:'🦆',n:'绿头鸭',l:'Anas platyrhynchos',r:'COMMON',s:'★★☆☆☆',c:'#4caf6b',d:'家鸭野生祖先，城市公园湖泊最常见水禽',bg:'linear-gradient(135deg,#1a3d20,#0f2412)'},
+];
+
+/* ═══════════════════════════════════
+   STATE
+═══════════════════════════════════ */
+const isDesktop = () => window.innerWidth >= 900;
+const activePrefix = () => isDesktop() ? 'd' : 'm';
+let deskIdx = 0, deskTransition = false, deskSlides = [];
+let mobIdx = 0, mobTransition = false, mobSlides = [];
+let likedSet = new Set(), savedSet = new Set();
+let checkinDone = false;
+let likeCounts = {}, saveCounts = {};
+let toastTimer;
+function safeStoreGet(key) {
+  try { return localStorage.getItem(key); }
+  catch { return null; }
+}
+function safeStoreSet(key, value) {
+  try { localStorage.setItem(key, value); }
+  catch {}
+}
+const BIRD_CONTEXT = (() => {
+  const hour = new Date().getHours();
+  const slot = hour < 10 ? '今晨' : hour < 17 ? '今天' : hour < 20 ? '傍晚' : '今晚';
+  const cities = [
+    {name:'广州海珠湿地', bird:'白头鹎', tag:'城市林鸟'},
+    {name:'深圳福田红树林', bird:'黑脸琵鹭', tag:'滨海水鸟'},
+    {name:'杭州西溪湿地', bird:'翠鸟', tag:'湿地精灵'},
+    {name:'北京野鸭湖', bird:'苍鹭', tag:'迁徙停歇'},
+    {name:'昆明滇池', bird:'红嘴鸥', tag:'冬候鸟'}
+  ];
+  const saved = safeStoreGet('bw-context-city');
+  const city = cities.find(c => c.name === saved) || cities[Math.floor(Math.random() * cities.length)];
+  safeStoreSet('bw-context-city', city.name);
+  return {
+    ...city,
+    slot,
+    headline: `${city.name}${slot}适合观鸟`,
+    reason: `因为你最近停留过${city.tag}内容，为你插入这张本地 AI 推荐卡`
+  };
+})();
+allItems.forEach((item,i) => {
+  likeCounts['d'+i] = item.likes || 30000 + Math.floor(Math.random()*8000);
+  likeCounts['m'+i] = item.likes || 30000 + Math.floor(Math.random()*8000);
+  saveCounts['d'+i] = item.saves || 8000 + Math.floor(Math.random()*3000);
+  saveCounts['m'+i] = item.saves || 8000 + Math.floor(Math.random()*3000);
+});
+const commentCounts = allItems.map(item => item.comments || 1000 + Math.floor(Math.random()*500));
+
+/* ═══════════════════════════════════
+   SLIDE HTML BUILDERS
+═══════════════════════════════════ */
+function fmtNum(n) {
+  if (n >= 10000) return (n/10000).toFixed(1)+'w';
+  if (n >= 1000) return (n/1000).toFixed(1)+'k';
+  return ''+n;
+}
+
+function buildActions(prefix, i) {
+  const lk = fmtNum(likeCounts[prefix+i]);
+  const sv = fmtNum(saveCounts[prefix+i]);
+  const cm = fmtNum(commentCounts[i]);
+  return `<div class="actions">
+    <div class="act-btn" id="${prefix}likeBtn${i}" onclick="toggleLike('${prefix}',${i})"><div class="act-icon">❤️</div><div class="act-count" id="${prefix}likeCount${i}">${lk}</div></div>
+    <div class="act-btn" id="${prefix}saveBtn${i}" onclick="toggleSave('${prefix}',${i})"><div class="act-icon">⭐</div><div class="act-count" id="${prefix}saveCount${i}">${sv}</div></div>
+    <div class="act-btn" onclick="openComments(${i})"><div class="act-icon">💬</div><div class="act-count">${cm}</div></div>
+    <div class="act-btn" onclick="openShare()"><div class="act-icon">↗️</div><div class="act-count">分享</div></div>
+  </div>`;
+}
+
+function buildVideoSlide(v, prefix, i) {
+  return `<div class="vid-wrap">
+    <div class="vid-loading" id="${prefix}loader${i}"></div>
+    <video id="${prefix}vid${i}" data-src="${v.src}" loop playsinline muted preload="none" style="width:100%;height:100%;object-fit:cover"></video>
+    <div class="vid-gradient"></div>
+    <div class="tap-zone" onclick="togglePlay('${prefix}',${i})"></div>
+    <div class="pause-icon" id="${prefix}picon${i}">⏸</div>
+    <div class="progress-wrap"><div class="progress-bar" id="${prefix}prog${i}"></div></div>
+    <div class="music-disc">🎵</div>
+    <div class="info">
+      <div class="info-author">
+        <div class="author-avatar">${v.authorEmoji}</div>
+        <span class="author-name">@${v.author}</span>
+        <button class="follow-btn" id="${prefix}follow${i}" onclick="toggleFollow(event,'${prefix}',${i})">+ 关注</button>
+      </div>
+      <div class="info-title">${v.title}</div>
+      <div class="info-tags">${v.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      <div class="loc-badge">${v.location}</div>
+      <div class="ai-reason">因为你喜欢${v.tags[1].replace('#','')}，为你找到这条本地精选鸟类视频</div>
+    </div>
+    ${buildActions(prefix,i)}
+  </div>`;
+}
+
+function buildFeatureHubCard(prefix, i) {
+  const tabs = [
+    ['识鸟', 'identify'],
+    ['打卡', 'checkin'],
+    ['鸟点', 'hotspots'],
+    ['鸟友', 'sightings'],
+    ['图鉴', 'collection']
+  ].map((t, idx) => `<button class="feature-tab ${idx===0?'active':''}" onclick="selectFeaturePanel('${prefix}',${i},${idx})">${t[0]}</button>`).join('');
+
+  return `<div class="feature-hub">
+    <div class="feature-top">
+      <div class="feature-kicker">BirdWatch 功能中心</div>
+      <div class="feature-title">先识鸟，再去看鸟</div>
+      <div class="feature-sub">上下继续刷视频，左右切换工具卡。核心识别能力放在第一张。</div>
+    </div>
+    <div class="feature-tabs" id="${prefix}FeatureTabs${i}">${tabs}</div>
+    <div class="feature-track" id="${prefix}FeatureTrack${i}" onscroll="syncFeatureTabs('${prefix}',${i})">
+      <section class="feature-panel">${buildIdentifyPanel(prefix,i)}</section>
+      <section class="feature-panel">${buildCheckinPanel(prefix,i)}</section>
+      <section class="feature-panel">${buildHotspotsPanel()}</section>
+      <section class="feature-panel">${buildSightingsPanel(prefix,i)}</section>
+      <section class="feature-panel">${buildCollectionPanel()}</section>
+    </div>
+    <div class="feature-hint">左右滑动切换功能 · 上下滑动回到视频流</div>
+    ${buildActions(prefix,i)}
+  </div>`;
+}
+
+function buildIdentifyPanel(prefix, i) {
+  return `<div class="feature-panel-scroll">
+    <div class="panel-card identify-hero">
+      <div class="context-pill">🎧 核心功能</div>
+      <div class="panel-title">听鸟叫识别鸟</div>
+      <div class="panel-desc">点击按钮播放模拟采样音，本地返回预置识别结果。比赛演示时能直观看出 AI 体验。</div>
+      <button class="record-btn" onclick="fakeBirdSound('${prefix}',${i})">🎙</button>
+      <div class="record-label" id="${prefix}SoundResult${i}">按住识别附近鸟鸣</div>
+      <div class="sound-wave" style="justify-content:center"><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+    <div class="identify-modes">
+      <button class="mode-btn" onclick="showToast('拍照识别：演示模式')">📷 拍照识别<span>上传或拍摄鸟影，返回候选鸟种</span></button>
+      <button class="mode-btn" onclick="showToast('特征检索：演示模式')">🔎 特征检索<span>按颜色、体型、地点手动筛选</span></button>
+    </div>
+    <div class="ai-reason">${BIRD_CONTEXT.reason}</div>
+  </div>`;
+}
+
+function buildCheckinPanel(prefix, i) {
+  const uid = prefix+'hubck'+i;
+  const savedBird = getTodayBird();
+  const days = ['一','二','三','四','五','六','日'];
+  const dayHtml = days.map((d,di)=>`<div class="dc ${di===6?'today':'done'}">${d}</div>`).join('');
+  return `<div class="feature-panel-scroll">
+    <div class="panel-card">
+      <div class="panel-title">每日打卡抽鸟卡</div>
+      <div class="panel-desc">用轻互动制造回访理由，再次进入会显示“你又遇到了它”。</div>
+      <div class="ck-days">${dayHtml}</div>
+      <div class="ck-reveal" id="${uid}Reveal" onclick="revealCard('${uid}')" style="${savedBird ? `background:${savedBird.bg};border-color:${savedBird.c}80` : ''}">
+        <span class="reveal-emoji" id="${uid}Emoji">${savedBird ? savedBird.e : '❓'}</span>
+        <div class="reveal-rarity" id="${uid}Rarity" style="${savedBird ? `color:${savedBird.c}` : ''}">${savedBird ? savedBird.r : '点击翻开今日鸟卡'}</div>
+        <div id="${uid}Detail" style="${savedBird ? 'display:block' : 'display:none'}">
+          <div class="reveal-name" id="${uid}Name">${savedBird ? savedBird.n : ''}</div>
+          <div class="reveal-latin" id="${uid}Latin">${savedBird ? savedBird.l : ''}</div>
+          <div class="reveal-stars" id="${uid}Stars" style="${savedBird ? `color:${savedBird.c}` : ''}">${savedBird ? savedBird.s : ''}</div>
+          <div class="reveal-desc" id="${uid}Desc">${savedBird ? savedBird.d : ''}</div>
+        </div>
+      </div>
+      <button class="ck-btn" id="${uid}Btn" onclick="revealCard('${uid}')">${savedBird ? `你又遇到了它：${savedBird.n}` : '翻开我的鸟卡'}</button>
+    </div>
+  </div>`;
+}
+
+function buildHotspotsPanel() {
+  const spots = [
+    {r:1,n:'西溪湿地 · 观鸟台',m:'2.4 km · 今日 312 条记录',w:'100%',t:true},
+    {r:2,n:'鄱阳湖 · 候鸟保护区',m:'6.1 km · 候鸟活跃',w:'70%',t:true},
+    {r:3,n:'北京野鸭湖湿地',m:'12.8 km · 适合晨观',w:'45%',t:false},
+    {r:4,n:'深圳福田红树林',m:'15 km · 滨海水鸟',w:'30%',t:false},
+  ];
+  const sh = spots.map(s=>`<div class="phone-hs-item" onclick="showToast('鸟点：${s.n}')">
+    <div class="phi-rank${s.t?' t':''}">${s.r}</div>
+    <div class="phi-info"><div class="phi-name">${s.n}</div><div class="phi-meta">${s.m}</div></div>
+    <div class="phi-bar"><div class="phi-bar-fill" style="width:${s.w}"></div></div></div>`).join('');
+  return `<div class="feature-panel-scroll">
+    <div class="panel-card">
+      <div class="context-pill">🗺️ 鸟点地图</div>
+      <div class="panel-title">${BIRD_CONTEXT.headline}</div>
+      <div class="panel-desc">展示附近/热门观鸟地点，和“鸟友动态”明确区分。</div>
+      ${sh}
+    </div>
+  </div>`;
+}
+
+function buildSightingsPanel(prefix, i) {
+  const minuteA = 1 + Math.floor(Math.random()*6);
+  const minuteB = 8 + Math.floor(Math.random()*18);
+  const minuteC = 25 + Math.floor(Math.random()*22);
+  const sights = [
+    {b:`🦢 ${BIRD_CONTEXT.bird} × ${3 + Math.floor(Math.random()*9)} 只`,t:`${minuteA}分钟前`,fresh:true,m:`📍 ${BIRD_CONTEXT.name} · @附近鸟友`,rare:false},
+    {b:'🦅 遗鸥 × 1 只',t:`${minuteB}分钟前`,fresh:false,m:'📍 鄱阳湖 · @望远镜Carl',rare:true},
+    {b:'🐦 红嘴蓝鹊 × 3 只',t:`${minuteC}分钟前`,fresh:false,m:'📍 北京野鸭湖 · @夜鸟阿三',rare:false},
+  ];
+  const sh = sights.map(s=>`<div class="phone-sight-item${s.rare?' rare-b':''}" onclick="showToast('鸟友动态：${s.b}')">
+    <div class="psi-row"><span class="psi-bird">${s.b}${s.rare?'<span class="psi-rare">稀有</span>':''}</span><span class="psi-time ${s.fresh?'fresh':'old'}">${s.t}</span></div>
+    <div class="psi-meta">${s.m}</div></div>`).join('');
+  return `<div class="feature-panel-scroll">
+    <div class="panel-card">
+      <div class="context-pill">👥 鸟友动态</div>
+      <div class="panel-title">附近鸟况速报</div>
+      <div class="panel-desc">这里是用户和社区记录，不再和鸟点地图混在一起。</div>
+      ${sh}
+    </div>
+  </div>`;
+}
+
+function buildCollectionPanel() {
+  const cards = [
+    {r:'LEGENDARY',rc:'legendary',n:'丹顶鹤',l:'Grus japonensis',s:'★★★★★',e:'🦢'},
+    {r:'RARE',rc:'rare',n:'黑颈鹤',l:'Grus nigricollis',s:'★★★★☆',e:'🦅'},
+    {r:'UNCOMMON',rc:'uncommon',n:'白腹鹞',l:'Circus spilonotus',s:'★★★☆☆',e:'🦉'},
+    {r:'COMMON',rc:'common',n:'翠鸟',l:'Alcedo atthis',s:'★★☆☆☆',e:'🐦'},
+  ];
+  const ch = cards.map(c=>`<div class="phone-bird-card pbc-${c.rc}" onclick="showToast('${c.n} · ${c.r}')">
+    <div class="pbc-rarity ${c.rc}">${c.r}</div><div class="pbc-name">${c.n}</div><div class="pbc-latin">${c.l}</div>
+    <div class="pbc-stars ${c.rc}">${c.s}</div><div class="pbc-emoji">${c.e}</div></div>`).join('');
+  return `<div class="feature-panel-scroll">
+    <div class="panel-card">
+      <div class="context-pill">📖 鸟类图鉴</div>
+      <div class="panel-title">我的鸟卡收藏</div>
+      <div class="panel-desc">保留抽卡乐趣，用收藏和再次遇见强化回访动机。</div>
+      <div class="col-grid">${ch}</div>
+    </div>
+  </div>`;
+}
+
+function buildSkillsCard(prefix, i) {
+  const skills = [
+    {icon:'🦆',title:'《新手如何识鸟！》',count:'20.2w'},
+    {icon:'🦉',title:'《如何区分相似鸟种》',count:'10.3w'},
+    {icon:'🦢',title:'《鄱阳湖黑颈鹤首次记录实况》',count:'55.2w',center:true,badge:'MEGA RARE!'},
+    {icon:'🦜',title:'《鸟鸣识别技巧》',count:'20.6w'},
+    {icon:'🐦',title:'《迁徙季节追鸟攻略》',count:'3.8w'},
+    {icon:'🦅',title:'《长焦镜头拍鸟教程》',count:'26.6w'},
+  ];
+  const thumbs = skills.map(s => {
+    if(s.center) return `<div class="skill-thumb skill-center" onclick="showToast('${s.title}')">
+      <div class="skill-thumb-inner" style="background:linear-gradient(135deg,#2a1a40,#100a28);height:100%"><span style="position:relative;z-index:1;font-size:30px">${s.icon}</span></div>
+      <div class="skill-play">▶</div><div class="skill-center-badge">${s.badge}</div>
+      <div class="skill-title">${s.title}</div><div class="skill-count">${s.count}</div></div>`;
+    return `<div class="skill-thumb" onclick="showToast('${s.title}')">
+      <div class="skill-thumb-inner"><span style="position:relative;z-index:1">${s.icon}</span></div>
+      <div class="skill-play">▶</div>
+      <div class="skill-title">${s.title}</div><div class="skill-count">${s.count}</div></div>`;
+  }).join('');
+  return `<div style="position:relative;width:100%;height:100%;background:linear-gradient(180deg,#050e07,#000)">
+    <div class="card-scroll">
+      <div class="skills-hero">
+        <div class="skills-hero-tag">🤖 ${BIRD_CONTEXT.headline}</div>
+        <div class="skills-hero-title">识鸟技能大涨！</div>
+        <div class="skills-hero-sub">${BIRD_CONTEXT.reason}</div>
+      </div>
+      <div class="skills-grid">${thumbs}</div>
+      <div class="skills-actions">
+        <button class="btn-sk sec" onclick="showToast('已标记不感兴趣')">不感兴趣</button>
+        <button class="btn-sk pri" onclick="showToast('为您加载更多科普视频...')">🔭 更多技巧</button>
+      </div>
+    </div>
+    ${buildActions(prefix,i)}
+    <div class="music-disc">🎴</div>
+  </div>`;
+}
+
+function buildCheckinCard(prefix, i) {
+  const uid = prefix+'ck';
+  const savedBird = getTodayBird();
+  const prompt = savedBird ? `你又遇到了它：${savedBird.n}` : '点击翻开今日鸟卡';
+  const days = ['一','二','三','四','五','六','日'];
+  const dayHtml = days.map((d,di)=>`<div class="dc ${di===6?'today':'done'}">${d}</div>`).join('');
+  return `<div style="position:relative;width:100%;height:100%;background:linear-gradient(180deg,#070f08,#000)">
+    <div class="ck-wrap">
+      <div class="ck-box">
+        <div class="ck-top"><div class="ck-title">🃏 每日打卡 · 随机抽卡</div><div class="ck-streak">🔥 连续 7 天</div></div>
+        <div class="ck-days">${dayHtml}</div>
+        <div class="ck-reveal" id="${uid}Reveal" onclick="revealCard('${uid}')" style="${savedBird ? `background:${savedBird.bg};border-color:${savedBird.c}80` : ''}">
+          <span class="reveal-emoji" id="${uid}Emoji">${savedBird ? savedBird.e : '❓'}</span>
+          <div class="reveal-rarity" id="${uid}Rarity" style="${savedBird ? `color:${savedBird.c}` : ''}">${savedBird ? savedBird.r : prompt}</div>
+          <div id="${uid}Detail" style="${savedBird ? 'display:block' : 'display:none'}">
+            <div class="reveal-name" id="${uid}Name">${savedBird ? savedBird.n : ''}</div>
+            <div class="reveal-latin" id="${uid}Latin">${savedBird ? savedBird.l : ''}</div>
+            <div class="reveal-stars" id="${uid}Stars" style="${savedBird ? `color:${savedBird.c}` : ''}">${savedBird ? savedBird.s : ''}</div>
+            <div class="reveal-desc" id="${uid}Desc">${savedBird ? savedBird.d : ''}</div>
+          </div>
+        </div>
+        <button class="ck-btn" id="${uid}Btn" onclick="revealCard('${uid}')">${savedBird ? prompt : '翻开我的鸟卡 🎴'}</button>
+      </div>
+      <div class="ck-extra">今日已有 <span>${3800 + new Date().getHours() * 17}</span> 位鸟友完成签到</div>
+    </div>
+    ${buildActions(prefix,i)}
+    <div class="music-disc">🎴</div>
+  </div>`;
+}
+
+function buildHotspotsCard(prefix, i) {
+  const spots = [
+    {r:1,n:'西溪湿地 · 观鸟台',m:'2.4 km · 今日 312 种记录',w:'100%',t:true},
+    {r:2,n:'鄱阳湖 · 候鸟保护区',m:'6.1 km · 今日 164 种记录',w:'70%',t:true},
+    {r:3,n:'北京野鸭湖湿地',m:'12.8 km · 今日 98 种记录',w:'45%',t:false},
+    {r:4,n:'深圳福田 · 红树林',m:'15 km · 今日 76 种记录',w:'30%',t:false},
+  ];
+  const evs = [
+    {m:'04月',d:'28',n:'2026 达亿瓦全国观鸟赛',l:'📍 深圳 观澜',p:'¥100,000+'},
+    {m:'05月',d:'20',n:'甘肃银川 · 春季鸟类普查',l:'📍 甘肃 银川',p:'¥10,000+'},
+    {m:'06月',d:'01',n:'江西鄱阳 · 湖区生态嘉年华',l:'📍 江西 鄱阳',p:'¥10,000+'},
+  ];
+  const sh = spots.map(s=>`<div class="phone-hs-item" onclick="showToast('前往：${s.n}')">
+    <div class="phi-rank${s.t?' t':''}">${s.r}</div>
+    <div class="phi-info"><div class="phi-name">${s.n}</div><div class="phi-meta">${s.m}</div></div>
+    <div class="phi-bar"><div class="phi-bar-fill" style="width:${s.w}"></div></div></div>`).join('');
+  const eh = evs.map(e=>`<div class="phone-ev-item" onclick="showToast('报名：${e.n}')">
+    <div class="pei-date"><div class="pei-month">${e.m}</div><div class="pei-day">${e.d}</div></div>
+    <div class="pei-info"><div class="pei-name">${e.n}</div><div class="pei-loc">${e.l}</div></div>
+    <div class="pei-prize">${e.p}</div></div>`).join('');
+  return `<div style="position:relative;width:100%;height:100%;background:linear-gradient(180deg,#060d07,#000)">
+    <div class="card-scroll">
+      <div class="hs-wrap">
+        <div class="context-pill">📍 ${BIRD_CONTEXT.headline}</div>
+        <div class="hs-sec"><div class="hs-head">🔥 本周热点鸟地</div>${sh}</div>
+        <div class="hs-sec"><div class="hs-head">🏆 近期赛事</div>${eh}</div>
+      </div>
+    </div>
+    ${buildActions(prefix,i)}
+    <div class="music-disc">🗺️</div>
+  </div>`;
+}
+
+function buildCollectionCard(prefix, i) {
+  const cards = [
+    {r:'LEGENDARY',rc:'legendary',n:'丹顶鹤',l:'Grus japonensis',s:'★★★★★',e:'🦢'},
+    {r:'RARE',rc:'rare',n:'黑颈鹤',l:'Grus nigricollis',s:'★★★★☆',e:'🦅'},
+    {r:'UNCOMMON',rc:'uncommon',n:'白腹鹞',l:'Circus spilonotus',s:'★★★☆☆',e:'🦉'},
+    {r:'COMMON',rc:'common',n:'翠鸟',l:'Alcedo atthis',s:'★★☆☆☆',e:'🐦'},
+  ];
+  const ch = cards.map(c=>`<div class="phone-bird-card pbc-${c.rc}" onclick="showToast('${c.n} — ${c.r}')">
+    <div class="pbc-rarity ${c.rc}">${c.r}</div>
+    <div class="pbc-name">${c.n}</div><div class="pbc-latin">${c.l}</div>
+    <div class="pbc-stars ${c.rc}">${c.s}</div>
+    <div class="pbc-emoji">${c.e}</div></div>`).join('');
+  return `<div style="position:relative;width:100%;height:100%;background:linear-gradient(180deg,#060d07,#000)">
+    <div class="col-wrap">
+      <div class="col-inner">
+        <div class="col-head"><div class="col-title">🃏 我的鸟卡收藏</div><div class="col-badge">今日</div></div>
+        <div class="col-grid">${ch}</div>
+      </div>
+    </div>
+    ${buildActions(prefix,i)}
+    <div class="music-disc">🎴</div>
+  </div>`;
+}
+
+function buildSightingsCard(prefix, i) {
+  const minuteA = 1 + Math.floor(Math.random()*6);
+  const minuteB = 8 + Math.floor(Math.random()*18);
+  const minuteC = 25 + Math.floor(Math.random()*22);
+  const sights = [
+    {b:`🦢 ${BIRD_CONTEXT.bird} × ${3 + Math.floor(Math.random()*9)} 只`,t:`${minuteA}分钟前`,fresh:true,m:`📍 ${BIRD_CONTEXT.name} · @附近鸟友`,rare:false},
+    {b:'🦅 遗鸥 × 1 只',t:`${minuteB}分钟前`,fresh:false,m:'📍 鄱阳湖 · @望远镜Carl',rare:true},
+    {b:'🐦 红嘴蓝鹊 × 3 只',t:`${minuteC}分钟前`,fresh:false,m:'📍 北京野鸭湖 · @夜鸟阿三',rare:false},
+  ];
+  const sh = sights.map(s=>`<div class="phone-sight-item${s.rare?' rare-b':''}" onclick="showToast('查看：${s.b}')">
+    <div class="psi-row">
+      <span class="psi-bird">${s.b}${s.rare?'<span class="psi-rare">稀有!</span>':''}</span>
+      <span class="psi-time ${s.fresh?'fresh':'old'}">${s.t}</span>
+    </div>
+    <div class="psi-meta">${s.m}</div></div>`).join('');
+  return `<div style="position:relative;width:100%;height:100%;background:linear-gradient(180deg,#060d07,#000)">
+    <div class="sights-wrap">
+      <div class="sights-inner">
+        <div class="sights-head">⚡ 实时鸟况速报</div>
+        ${sh}
+        <div class="sound-box">
+          <div class="sound-row">
+            <div class="sound-result" id="${prefix}SoundResult${i}">听到鸟叫？点一下模拟识别</div>
+            <button class="sound-btn" onclick="fakeBirdSound('${prefix}',${i})">录鸟声</button>
+          </div>
+          <div class="sound-wave"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="ai-reason">${BIRD_CONTEXT.reason}</div>
+      </div>
+    </div>
+    ${buildActions(prefix,i)}
+    <div class="music-disc">⚡</div>
+  </div>`;
+}
+
+function buildMegarareCard(prefix, i) {
+  return `<div style="position:relative;width:100%;height:100%;background:linear-gradient(180deg,#0d0428,#000)">
+    <div class="mr-wrap">
+      <div class="mr-card">
+        <div class="mr-badge">MEGA RARE!</div>
+        <span class="mr-emoji">🦢</span>
+        <div class="mr-title">鄱阳湖黑颈鹤首次记录</div>
+        <div class="mr-count">55.2w 次观看</div>
+        <button class="mr-btn" onclick="showToast('🎉 查看 MEGA RARE 详情')">查看详情</button>
+      </div>
+    </div>
+    ${buildActions(prefix,i)}
+    <div class="music-disc">🔮</div>
+  </div>`;
+}
+
+function buildSlide(item, prefix, i) {
+  if (item.type === 'video') return buildVideoSlide(item, prefix, i);
+  switch(item.cardType) {
+    case 'featureHub': return buildFeatureHubCard(prefix, i);
+    case 'skills':     return buildSkillsCard(prefix, i);
+    case 'checkin':    return buildCheckinCard(prefix, i);
+    case 'hotspots':   return buildHotspotsCard(prefix, i);
+    case 'collection': return buildCollectionCard(prefix, i);
+    case 'sightings':  return buildSightingsCard(prefix, i);
+    case 'megarare':   return buildMegarareCard(prefix, i);
+  }
+  return '';
+}
+
+/* ═══════════════════════════════════
+   RENDER FEEDS
+═══════════════════════════════════ */
+function renderMobDots() {
+  const el = document.getElementById('mobDots');
+  if (!el) return;
+  allItems.forEach((_,i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===0?' active':'');
+    d.id = 'mobdot'+i;
+    el.appendChild(d);
+  });
+}
+
+renderMobDots();
+
+const feedState = {};
+
+function createFeed(containerId, prefix) {
+  if (feedState[prefix]) return;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const pool = [-1, 0, 1].map(offset => {
+    const div = document.createElement('div');
+    div.className = 'd-slide offscreen';
+    div.dataset.offset = String(offset);
+    container.appendChild(div);
+    return div;
+  });
+  feedState[prefix] = { container, prefix, pool, index: 0, transition: false };
+  renderWindow(prefix, true);
+}
+
+function ensureActiveFeed() {
+  const prefix = activePrefix();
+  createFeed(prefix === 'd' ? 'deskFeed' : 'mobFeed', prefix);
+  return getFeed(prefix);
+}
+
+function getFeed(prefix) {
+  return feedState[prefix];
+}
+
+function syncLegacyState(prefix, index, transition) {
+  if (prefix === 'd') {
+    deskIdx = index;
+    deskTransition = transition;
+  } else {
+    mobIdx = index;
+    mobTransition = transition;
+  }
+}
+
+function paintSlide(slide, prefix, itemIndex, offset, immediate = false) {
+  slide.style.transition = immediate ? 'none' : '';
+  slide.className = 'd-slide';
+  slide.dataset.offset = String(offset);
+  slide.dataset.index = String(itemIndex);
+  slide.style.zIndex = offset === 0 ? '2' : '1';
+  slide.style.transform = `translate3d(0,${offset * 100}%,0)`;
+
+  if (itemIndex < 0 || itemIndex >= allItems.length) {
+    slide.innerHTML = '';
+    slide.className = 'd-slide offscreen';
+    slide.style.transform = `translate3d(0,${offset * 120}%,0)`;
+  } else {
+    slide.innerHTML = buildSlide(allItems[itemIndex], prefix, itemIndex);
+    slide.classList.toggle('active', offset === 0);
+    slide.setAttribute('aria-hidden', offset === 0 ? 'false' : 'true');
+    if (allItems[itemIndex]?.cardType === 'featureHub') {
+      requestAnimationFrame(() => selectFeaturePanel(prefix, itemIndex, pendingFeaturePanel));
+    }
+  }
+
+  if (immediate) requestAnimationFrame(() => { slide.style.transition = ''; });
+}
+
+function placeExistingSlide(slide, itemIndex, offset) {
+  slide.style.transition = 'none';
+  slide.className = 'd-slide';
+  slide.dataset.offset = String(offset);
+  slide.dataset.index = String(itemIndex);
+  slide.style.zIndex = offset === 0 ? '2' : '1';
+  slide.style.transform = `translate3d(0,${offset * 100}%,0)`;
+  slide.classList.toggle('active', offset === 0);
+  slide.setAttribute('aria-hidden', offset === 0 ? 'false' : 'true');
+  requestAnimationFrame(() => { slide.style.transition = ''; });
+}
+
+function renderWindow(prefix, immediate = false) {
+  const state = getFeed(prefix);
+  if (!state) return;
+  state.pool.forEach((slide, poolIndex) => {
+    const offset = poolIndex - 1;
+    const itemIndex = state.index + offset;
+    paintSlide(slide, prefix, itemIndex, offset, immediate);
+  });
+  syncLegacyState(prefix, state.index, false);
+  updateDots(prefix, state.index);
+  if (prefix === activePrefix()) prepareMedia(prefix);
+  else pauseFeedMedia(prefix);
+}
+
+function refreshActiveMedia() {
+  pauseFeedMedia(activePrefix() === 'd' ? 'm' : 'd');
+  prepareMedia(activePrefix());
+}
+
+function updateDots(prefix, activeIndex) {
+  if (prefix !== 'm') return;
+  allItems.forEach((_, i) => {
+    const dot = document.getElementById('mobdot'+i);
+    if (dot) dot.classList.toggle('active', i === activeIndex);
+  });
+}
+
+function prepareMedia(prefix) {
+  const state = getFeed(prefix);
+  if (!state) return;
+  state.pool.forEach(slide => {
+    const i = Number(slide.dataset.index);
+    const video = slide.querySelector('video');
+    if (!video) return;
+    if (i === state.index) {
+      ensureVideoLoaded(video);
+      video.muted = true;
+      video.play().catch(()=>{});
+      startProgress(prefix, i);
+    } else {
+      video.pause();
+      stopProgress(prefix, i);
+    }
+  });
+}
+
+function pauseFeedMedia(prefix) {
+  const state = getFeed(prefix);
+  if (!state) return;
+  state.pool.forEach(slide => {
+    const i = Number(slide.dataset.index);
+    const video = slide.querySelector('video');
+    if (video) video.pause();
+    if (Number.isFinite(i)) stopProgress(prefix, i);
+  });
+}
+
+/* ═══════════════════════════════════
+   NAV
+═══════════════════════════════════ */
+function goTo(prefix, newIdx) {
+  const state = getFeed(prefix);
+  if (!state || newIdx < 0 || newIdx >= allItems.length || state.transition) return;
+  const cur = state.index;
+  if (newIdx === cur) return;
+  const dir = newIdx > cur ? 1 : -1;
+  if (Math.abs(newIdx - cur) !== 1) {
+    state.index = newIdx;
+    state.transition = false;
+    renderWindow(prefix, true);
+    return;
+  }
+  const current = state.pool.find(s => Number(s.dataset.offset) === 0);
+  const entering = state.pool.find(s => Number(s.dataset.offset) === dir);
+  if (!current || !entering) return;
+
+  state.transition = true;
+  syncLegacyState(prefix, cur, true);
+  const oldVideo = document.getElementById(prefix+'vid'+cur);
+  if (oldVideo) { oldVideo.pause(); stopProgress(prefix, cur); }
+
+  state.pool.forEach(slide => slide.classList.add('is-moving'));
+  requestAnimationFrame(() => {
+    current.style.transform = `translate3d(0,${-dir * 100}%,0)`;
+    entering.style.transform = 'translate3d(0,0,0)';
+    entering.classList.add('active');
+    current.classList.remove('active');
+  });
+
+  window.setTimeout(() => {
+    state.pool.forEach(slide => {
+      slide.classList.remove('is-moving');
+      slide.style.transition = 'none';
+    });
+    state.index = newIdx;
+    state.transition = false;
+    if (dir === 1) {
+      const recycled = state.pool.find(s => Number(s.dataset.offset) === -1);
+      placeExistingSlide(current, newIdx - 1, -1);
+      placeExistingSlide(entering, newIdx, 0);
+      paintSlide(recycled, prefix, newIdx + 1, 1, true);
+      state.pool = [current, entering, recycled];
+    } else {
+      const recycled = state.pool.find(s => Number(s.dataset.offset) === 1);
+      paintSlide(recycled, prefix, newIdx - 1, -1, true);
+      placeExistingSlide(entering, newIdx, 0);
+      placeExistingSlide(current, newIdx + 1, 1);
+      state.pool = [recycled, entering, current];
+    }
+    syncLegacyState(prefix, state.index, false);
+    updateDots(prefix, state.index);
+    if (prefix === activePrefix()) prepareMedia(prefix);
+  }, 360);
+}
+
+function playVideo(prefix, i) {
+  if (allItems[i]?.type !== 'video') return;
+  if (prefix !== activePrefix()) return;
+  const v = document.getElementById(prefix+'vid'+i);
+  if (v) { ensureVideoLoaded(v); v.muted = true; v.play().catch(()=>{}); startProgress(prefix, i); }
+}
+
+/* ═══════════════════════════════════
+   VIDEO CONTROLS
+═══════════════════════════════════ */
+function ensureVideoLoaded(video) {
+  if (!video || video.dataset.loaded === '1') return;
+  const src = video.dataset.src;
+  if (!src) return;
+  video.preload = 'auto';
+  const source = document.createElement('source');
+  source.src = src;
+  source.type = src.toLowerCase().endsWith('.mp4') ? 'video/mp4' : 'video/webm';
+  video.appendChild(source);
+  video.dataset.loaded = '1';
+  video.load();
+}
+function hideLoader(prefix, i) {
+  const l = document.getElementById(prefix+'loader'+i);
+  if (l) l.style.display = 'none';
+}
+function startProgress(prefix, i) {
+  const v = document.getElementById(prefix+'vid'+i);
+  const bar = document.getElementById(prefix+'prog'+i);
+  if (!v || !bar) return;
+  if (v._pi) clearInterval(v._pi);
+  v._pi = setInterval(() => {
+    if (v.duration) bar.style.width = (v.currentTime/v.duration*100)+'%';
+  }, 400);
+}
+function stopProgress(prefix, i) {
+  const v = document.getElementById(prefix+'vid'+i);
+  if (v && v._pi) clearInterval(v._pi);
+}
+function togglePlay(prefix, i) {
+  const v = document.getElementById(prefix+'vid'+i);
+  if (!v) return;
+  ensureVideoLoaded(v);
+  const icon = document.getElementById(prefix+'picon'+i);
+  if (v.paused) { v.play(); if(icon) icon.textContent='⏸'; }
+  else { v.pause(); if(icon) icon.textContent='▶'; }
+  if (icon) {
+    icon.classList.remove('fadeout'); icon.classList.add('show');
+    clearTimeout(icon._t);
+    icon._t = setTimeout(() => { icon.classList.add('fadeout'); setTimeout(()=>icon.classList.remove('show','fadeout'),300); }, 800);
+  }
+}
+
+document.addEventListener('loadeddata', e => {
+  if (e.target.tagName !== 'VIDEO') return;
+  const id = e.target.id || '';
+  const prefix = id[0];
+  const i = Number(id.slice(4));
+  if (prefix && Number.isFinite(i)) hideLoader(prefix, i);
+}, true);
+
+document.addEventListener('error', e => {
+  if (e.target.tagName !== 'VIDEO') return;
+  const id = e.target.id || '';
+  const prefix = id[0];
+  const i = Number(id.slice(4));
+  if (prefix && Number.isFinite(i)) {
+    hideLoader(prefix, i);
+    showToast('本地视频加载失败，请直接用浏览器打开 HTML 文件');
+  }
+}, true);
+
+ensureActiveFeed();
+
+/* ═══════════════════════════════════
+   CHECKIN CARD LOGIC
+═══════════════════════════════════ */
+const ckDone = {};
+function todayKey() {
+  return new Date().toISOString().slice(0,10);
+}
+function getTodayBird() {
+  try {
+    const raw = safeStoreGet('bw-checkin-bird');
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    return saved.date === todayKey() ? saved.bird : null;
+  } catch {
+    return null;
+  }
+}
+function saveTodayBird(bird) {
+  safeStoreSet('bw-checkin-bird', JSON.stringify({ date: todayKey(), bird }));
+}
+function paintBirdCard(uid, bird) {
+  const emoji = document.getElementById(uid+'Emoji');
+  const rarity = document.getElementById(uid+'Rarity');
+  const detail = document.getElementById(uid+'Detail');
+  const reveal = document.getElementById(uid+'Reveal');
+  const btn = document.getElementById(uid+'Btn');
+  if(emoji) emoji.textContent = bird.e;
+  if(rarity) { rarity.textContent = bird.r; rarity.style.color = bird.c; }
+  if(detail) detail.style.display = 'block';
+  ['Name','Latin','Stars','Desc'].forEach(k => {
+    const el = document.getElementById(uid+k);
+    if(!el) return;
+    if(k==='Name') el.textContent = bird.n;
+    else if(k==='Latin') el.textContent = bird.l;
+    else if(k==='Stars') { el.textContent = bird.s; el.style.color = bird.c; }
+    else el.textContent = bird.d;
+  });
+  if(reveal) { reveal.style.background = bird.bg; reveal.style.borderColor = bird.c+'80'; }
+  if(btn) { btn.textContent='你又遇到了它 ✓'; btn.style.background='linear-gradient(135deg,#2e7d32,#43a047)'; }
+}
+function revealCard(uid) {
+  const saved = getTodayBird();
+  if (saved) {
+    paintBirdCard(uid, saved);
+    showToast(`你又遇到了${saved.n}`);
+    return;
+  }
+  if (ckDone[uid]) { showToast('✅ 今日已签到！'); return; }
+  ckDone[uid] = true;
+  const rand = Math.random();
+  let pool;
+  if (rand < 0.05) pool = BIRDS.filter(b=>b.r==='LEGENDARY');
+  else if (rand < 0.25) pool = BIRDS.filter(b=>b.r==='RARE');
+  else if (rand < 0.60) pool = BIRDS.filter(b=>b.r==='UNCOMMON');
+  else pool = BIRDS.filter(b=>b.r==='COMMON');
+  const bird = pool[Math.floor(Math.random()*pool.length)];
+  saveTodayBird(bird);
+  paintBirdCard(uid, bird);
+  showToast(`抽到${bird.n}，已收入今日图鉴`);
+}
+
+function fakeBirdSound(prefix, i) {
+  const el = document.getElementById(prefix+'SoundResult'+i);
+  if (!el) return;
+  el.textContent = '正在分析 3 秒鸟鸣...';
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 1420;
+    gain.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.5);
+  } catch {}
+  window.setTimeout(() => {
+    el.textContent = `检测到 ${BIRD_CONTEXT.bird}，置信度 92%`;
+    showToast(`识别结果：${BIRD_CONTEXT.bird}`);
+  }, 650);
+}
+
+let pendingFeaturePanel = 0;
+function getFeatureHubIndex() {
+  return allItems.findIndex(x => x.cardType === 'featureHub');
+}
+function selectFeaturePanel(prefix, i, panelIndex) {
+  pendingFeaturePanel = panelIndex;
+  const track = document.getElementById(prefix+'FeatureTrack'+i);
+  if (!track) return;
+  track.scrollTo({ left: track.clientWidth * panelIndex, behavior: 'smooth' });
+  updateFeatureTabs(prefix, i, panelIndex);
+}
+function updateFeatureTabs(prefix, i, panelIndex) {
+  const tabs = document.querySelectorAll(`#${prefix}FeatureTabs${i} .feature-tab`);
+  tabs.forEach((tab, idx) => tab.classList.toggle('active', idx === panelIndex));
+}
+function syncFeatureTabs(prefix, i) {
+  const track = document.getElementById(prefix+'FeatureTrack'+i);
+  if (!track || !track.clientWidth) return;
+  const panelIndex = Math.round(track.scrollLeft / track.clientWidth);
+  pendingFeaturePanel = panelIndex;
+  updateFeatureTabs(prefix, i, panelIndex);
+}
+function jumpToFeaturePanel(panelIndex) {
+  pendingFeaturePanel = panelIndex;
+  const hub = getFeatureHubIndex();
+  if (hub === -1) return;
+  const p = activePrefix();
+  const curI = p === 'd' ? deskIdx : mobIdx;
+  if (curI !== hub) goTo(p, hub);
+  window.setTimeout(() => selectFeaturePanel(p, hub, panelIndex), curI === hub ? 0 : 430);
+}
+
+function jumpToCheckin() {
+  jumpToFeaturePanel(1);
+}
+
+function jumpToItem(match) {
+  ensureActiveFeed();
+  const idx = typeof match === 'number' ? match : allItems.findIndex(match);
+  if (idx < 0) return;
+  const p = activePrefix();
+  const curI = p === 'd' ? deskIdx : mobIdx;
+  if (curI !== idx) goTo(p, idx);
+}
+
+/* ═══════════════════════════════════
+   INTERACTIONS
+═══════════════════════════════════ */
+function toggleLike(prefix, i) {
+  const key = prefix+i;
+  const btn = document.getElementById(prefix+'likeBtn'+i);
+  const cnt = document.getElementById(prefix+'likeCount'+i);
+  if (!cnt) return;
+  if (likedSet.has(key)) {
+    likedSet.delete(key); likeCounts[key]--;
+    showToast('取消点赞');
+  } else {
+    likedSet.add(key); likeCounts[key]++;
+    if(btn) { btn.classList.add('pop'); setTimeout(()=>btn.classList.remove('pop'),350); }
+    showToast('❤️ 已点赞！');
+  }
+  cnt.textContent = fmtNum(likeCounts[key]);
+}
+
+function toggleSave(prefix, i) {
+  const key = prefix+i;
+  const cnt = document.getElementById(prefix+'saveCount'+i);
+  if (!cnt) return;
+  if (savedSet.has(key)) {
+    savedSet.delete(key); saveCounts[key]--;
+    showToast('取消收藏');
+  } else {
+    savedSet.add(key); saveCounts[key]++;
+    showToast('⭐ 已收藏！');
+  }
+  cnt.textContent = fmtNum(saveCounts[key]);
+}
+
+function toggleFollow(e, prefix, i) {
+  e.stopPropagation();
+  const btn = document.getElementById(prefix+'follow'+i);
+  if (!btn) return;
+  if (btn.classList.contains('following')) {
+    btn.classList.remove('following'); btn.textContent='+ 关注'; showToast('已取消关注');
+  } else {
+    btn.classList.add('following'); btn.textContent='✓ 已关注'; showToast('✅ 关注成功！');
+  }
+}
+
+function openComments(i) {
+  document.getElementById('commentTitle').textContent = '评论 ' + fmtNum(commentCounts[i]);
+  document.getElementById('commentDrawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('show');
+}
+function openShare() {
+  document.getElementById('sharePanel').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('show');
+}
+function closeAllPanels() {
+  document.getElementById('commentDrawer').classList.remove('open');
+  document.getElementById('sharePanel').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('show');
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+/* ═══════════════════════════════════
+   DESKTOP NAV
+═══════════════════════════════════ */
+function deskNavClick(el, tab) {
+  document.querySelectorAll('.sidebar .nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  const featureTargets = { identify:0, checkin:1, map:2, birders:3, collection:4 };
+  if (tab === 'msg') {
+    openComments(activePrefix() === 'd' ? deskIdx : mobIdx);
+    return;
+  }
+  if (tab === 'home' || tab === 'live') jumpToItem(0);
+  else jumpToFeaturePanel(featureTargets[tab] ?? 0);
+  showToast({home:'🏠 首页',live:'📡 直播大厅',map:'🗺️ 鸟点地图',birders:'👥 鸟友动态',identify:'🎧 识鸟',checkin:'🃏 每日打卡',collection:'📖 鸟类图鉴'}[tab] || tab);
+}
+
+function deskTabClick(el) {
+  document.querySelectorAll('.phone-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function mobTabClick(el, tab) {
+  showToast(tab==='live'?'📡 直播频道':tab==='near'?'📍 附近鸟况':'🎯 智能推荐');
+}
+
+/* ═══════════════════════════════════
+   DESKTOP: wheel scroll on phone
+═══════════════════════════════════ */
+function canFeedPageFromScroll(scroller, deltaY) {
+  if (!scroller) return true;
+  if (scroller.scrollHeight - scroller.clientHeight < 96) return true;
+  const atTop = scroller.scrollTop <= 2;
+  const atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2;
+  return (deltaY < 0 && atTop) || (deltaY > 0 && atBottom);
+}
+
+let deskWheelLock = false;
+const deskFeedEl = document.getElementById('deskFeed');
+if (deskFeedEl) {
+  deskFeedEl.addEventListener('wheel', e => {
+    const scroller = e.target.closest('.card-scroll,.feature-panel-scroll');
+    if (scroller && !canFeedPageFromScroll(scroller, e.deltaY)) return;
+    e.preventDefault();
+    if (deskWheelLock) return;
+    deskWheelLock = true;
+    setTimeout(()=>deskWheelLock=false, 650);
+    if (e.deltaY > 20) goTo('d', deskIdx+1);
+    else if (e.deltaY < -20) goTo('d', deskIdx-1);
+  }, {passive:false});
+}
+
+/* ═══════════════════════════════════
+   MOBILE: touch & wheel
+═══════════════════════════════════ */
+let mobTouchY = 0, mobTouchX = 0, mobTouchScroller = null, mobTouchScrollTop = 0;
+document.addEventListener('touchstart', e => {
+  mobTouchScroller = e.target.closest('.card-scroll,.feature-panel-scroll');
+  mobTouchScrollTop = mobTouchScroller ? mobTouchScroller.scrollTop : 0;
+  if (!isDesktop()) {
+    mobTouchY = e.touches[0].clientY;
+    mobTouchX = e.touches[0].clientX;
+    if (!mobTouchScroller && !e.target.closest('.feature-track')) e.preventDefault();
+  }
+}, {passive:false});
+
+document.addEventListener('touchend', e => {
+  if (isDesktop() || mobTransition) return;
+  const dy = e.changedTouches[0].clientY - mobTouchY;
+  const dx = e.changedTouches[0].clientX - mobTouchX;
+  if (Math.abs(dx) > Math.abs(dy) && e.target.closest('.feature-track')) return;
+  if (Math.abs(dy) < 40) return;
+  if (mobTouchScroller && !canFeedPageFromScroll(mobTouchScroller, -dy)) return;
+  if (dy < 0) goTo('m', mobIdx+1);
+  else goTo('m', mobIdx-1);
+});
+
+let mobWheelLock = false;
+document.addEventListener('wheel', e => {
+  if (isDesktop()) return;
+  const scroller = e.target.closest('.card-scroll,.feature-panel-scroll');
+  if (scroller && !canFeedPageFromScroll(scroller, e.deltaY)) return;
+  e.preventDefault();
+  if (mobWheelLock) return;
+  mobWheelLock = true;
+  setTimeout(()=>mobWheelLock=false, 650);
+  if (e.deltaY > 20) goTo('m', mobIdx+1);
+  else if (e.deltaY < -20) goTo('m', mobIdx-1);
+}, {passive:false});
+
+document.addEventListener('keydown', e => {
+  const p = isDesktop() ? 'd' : 'm';
+  const cur = p==='d' ? deskIdx : mobIdx;
+  if (e.key==='ArrowDown') goTo(p, cur+1);
+  else if (e.key==='ArrowUp') goTo(p, cur-1);
+  else if (e.key===' ') { e.preventDefault(); togglePlay(p, cur); }
+});
+
+let lastActivePrefix = activePrefix();
+window.addEventListener('resize', () => {
+  const next = activePrefix();
+  if (next === lastActivePrefix) return;
+  lastActivePrefix = next;
+  ensureActiveFeed();
+  refreshActiveMedia();
+}, {passive:true});
+
+/* ═══════════════════════════════════
+   INIT
+═══════════════════════════════════ */
+setTimeout(() => {
+  ensureActiveFeed();
+  refreshActiveMedia();
+}, 200);
+</script>
+</body>
+</html>
